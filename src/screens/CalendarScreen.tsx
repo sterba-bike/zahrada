@@ -1,0 +1,150 @@
+import React, { useMemo, useState } from 'react';
+import { Pressable, Text, View, StyleSheet } from 'react-native';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList, MainTabParamList } from '../navigation/types';
+import { Screen, Card, EmptyState, colors } from '../components/ui';
+import { useAppData } from '../context/AppDataContext';
+import { Task, TaskType } from '../types';
+import { formatDate } from '../utils/format';
+import Fab from '../components/Fab';
+import QuickActionSheet from '../components/QuickActionSheet';
+
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<MainTabParamList, 'Kalendář'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
+
+const TYPE_LABEL: Record<TaskType, string> = {
+  zaliti: 'Zálivka',
+  hnojeni: 'Hnojení',
+  sklizen: 'Sklizeň',
+  orez: 'Řez',
+  ochrana: 'Ochrana',
+  jine: 'Jiné',
+};
+
+const FILTERS: (TaskType | 'vse')[] = ['vse', 'zaliti', 'hnojeni', 'sklizen', 'orez', 'ochrana', 'jine'];
+
+export default function CalendarScreen({ navigation }: Props) {
+  const { tasks, completeTask } = useAppData();
+  const [filter, setFilter] = useState<TaskType | 'vse'>('vse');
+  const [sheetVisible, setSheetVisible] = useState(false);
+
+  const filtered = useMemo(
+    () => tasks.filter((t) => filter === 'vse' || t.type === filter),
+    [tasks, filter]
+  );
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    for (const t of filtered) {
+      const key = formatDate(t.dueDate);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(t);
+    }
+    return Array.from(map.entries()).sort(
+      (a, b) => new Date(filtered.find((t) => formatDate(t.dueDate) === a[0])!.dueDate).getTime() -
+        new Date(filtered.find((t) => formatDate(t.dueDate) === b[0])!.dueDate).getTime()
+    );
+  }, [filtered]);
+
+  return (
+    <Screen>
+      <View style={styles.headerRow}>
+        <Text style={styles.pageTitle}>Kalendář prací</Text>
+        <Pressable onPress={() => navigation.navigate('AddTask')}>
+          <Text style={styles.addTaskLink}>+ Přidat úkol</Text>
+        </Pressable>
+      </View>
+      <View style={styles.filterRow}>
+        {FILTERS.map((f) => (
+          <Pressable
+            key={f}
+            onPress={() => setFilter(f)}
+            style={[styles.chip, filter === f && styles.chipActive]}
+          >
+            <Text style={[styles.chipText, filter === f && styles.chipTextActive]}>
+              {f === 'vse' ? 'Vše' : TYPE_LABEL[f]}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {grouped.length === 0 ? (
+        <EmptyState text="Zatím tu nemáte žádné úkoly." />
+      ) : (
+        grouped.map(([day, dayTasks]) => (
+          <View key={day} style={{ marginBottom: 8 }}>
+            <Text style={styles.dayHeading}>{day}</Text>
+            {dayTasks.map((t) => (
+              <Card key={t.id}>
+                <View style={styles.taskRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.taskTitle, t.done && styles.taskDone]}>{t.title}</Text>
+                    <Text style={styles.taskMeta}>
+                      {TYPE_LABEL[t.type]}
+                      {t.weatherAdjusted ? ' · upraveno kvůli počasí' : ''}
+                    </Text>
+                    {t.done && (
+                      <Text style={styles.taskMeta}>
+                        Splnil(a) {t.doneBy} · {t.doneAt ? formatDate(t.doneAt) : ''}
+                      </Text>
+                    )}
+                  </View>
+                  {!t.done && (
+                    <Pressable onPress={() => completeTask(t.id)} style={styles.doneButton}>
+                      <Text style={styles.doneButtonText}>Hotovo</Text>
+                    </Pressable>
+                  )}
+                </View>
+              </Card>
+            ))}
+          </View>
+        ))
+      )}
+      <View style={{ height: 80 }} />
+
+      <Fab onPress={() => setSheetVisible(true)} />
+      <QuickActionSheet
+        visible={sheetVisible}
+        onClose={() => setSheetVisible(false)}
+        onPickPhoto={() => navigation.navigate('AddJournalEntry', { photoOnly: true })}
+        onWriteNote={() => navigation.navigate('AddJournalEntry', {})}
+        onRecordHarvest={() => navigation.navigate('RecordHarvest')}
+        onCompleteTask={() => navigation.navigate('CompleteTask')}
+      />
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  pageTitle: { fontSize: 22, fontWeight: '800', color: colors.text },
+  addTaskLink: { color: colors.primary, fontWeight: '700' },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipText: { color: colors.text, fontWeight: '600', fontSize: 13 },
+  chipTextActive: { color: 'white' },
+  dayHeading: { fontSize: 14, fontWeight: '700', color: colors.textMuted, marginBottom: 6, marginTop: 6 },
+  taskRow: { flexDirection: 'row', alignItems: 'center' },
+  taskTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+  taskDone: { textDecorationLine: 'line-through', color: colors.textMuted },
+  taskMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  doneButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  doneButtonText: { color: 'white', fontWeight: '700', fontSize: 12 },
+});
