@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, TextField, PrimaryButton, SectionTitle, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
+import { useSingleSubmit } from '../utils/useSingleSubmit';
 import { TaskType } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddTask'>;
@@ -36,7 +37,7 @@ export default function AddTaskScreen({ navigation }: Props) {
     return new Date().toISOString();
   };
 
-  const handleSave = async () => {
+  const handleSave = useSingleSubmit(async () => {
     setSubmitted(true);
     if (!title.trim()) return;
     await addTask({
@@ -48,7 +49,7 @@ export default function AddTaskScreen({ navigation }: Props) {
       dueDate: parseDate(dueDate),
     });
     navigation.goBack();
-  };
+  });
 
   return (
     <Screen>

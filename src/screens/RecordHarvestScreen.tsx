@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, TextField, PrimaryButton, SectionTitle, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
+import { useSingleSubmit } from '../utils/useSingleSubmit';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'RecordHarvest'>;
 
@@ -19,9 +20,9 @@ export default function RecordHarvestScreen({ navigation }: Props) {
   const amountNum = parseFloat(amount.replace(',', '.'));
   const canSubmit = cropName.trim().length > 0 && amountNum > 0;
 
-  const handleSave = async () => {
+  const handleSave = useSingleSubmit(async () => {
     setSubmitted(true);
-    if (!canSubmit) return;
+    if (!canSubmit || saved) return;
     await addHarvest({
       gardenId: garden?.id ?? '',
       cropName: cropName.trim(),
@@ -31,7 +32,7 @@ export default function RecordHarvestScreen({ navigation }: Props) {
     });
     setSaved(true);
     setTimeout(() => navigation.goBack(), 700);
-  };
+  });
 
   return (
     <Screen>
@@ -57,7 +58,7 @@ export default function RecordHarvestScreen({ navigation }: Props) {
       )}
       <TextField label="Jednotka" value={unit} onChangeText={setUnit} placeholder="kg" />
       <TextField label="Datum" value={date} onChangeText={setDate} placeholder="d.m.rrrr" />
-      <PrimaryButton title="Uložit sklizeň" onPress={handleSave} />
+      <PrimaryButton title="Uložit sklizeň" onPress={handleSave} disabled={saved} />
       {saved && <Text style={{ color: colors.primary, textAlign: 'center', marginTop: 12, fontWeight: '700' }}>✓ Uloženo</Text>}
     </Screen>
   );

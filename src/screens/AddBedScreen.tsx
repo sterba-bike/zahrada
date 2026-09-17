@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, TextField, PrimaryButton, SectionTitle, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
+import { useSingleSubmit } from '../utils/useSingleSubmit';
 import { BedType } from '../types';
 import { BED_TYPE_LABEL } from '../utils/format';
 
@@ -17,12 +18,12 @@ export default function AddBedScreen({ navigation }: Props) {
   const [type, setType] = useState<BedType>('zeleninovy');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleCreate = async () => {
+  const handleCreate = useSingleSubmit(async () => {
     setSubmitted(true);
     if (!name.trim()) return;
     await addBed({ name: name.trim(), type, foundedAt: new Date().toISOString() });
     navigation.goBack();
-  };
+  });
 
   return (
     <Screen>

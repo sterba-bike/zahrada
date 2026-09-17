@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { Screen, TextField, PrimaryButton, SectionTitle, colors } from '../../components/ui';
 import { useAppData } from '../../context/AppDataContext';
+import { useSingleSubmit } from '../../utils/useSingleSubmit';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateGarden'>;
 
@@ -17,7 +18,7 @@ export default function CreateGardenScreen({ navigation }: Props) {
 
   const canSubmit = name.trim().length > 0 && location.trim().length > 0;
 
-  const handleSubmit = async () => {
+  const handleSubmit = useSingleSubmit(async () => {
     setSubmitted(true);
     if (!canSubmit) return;
     const garden = await createGarden({
@@ -27,7 +28,7 @@ export default function CreateGardenScreen({ navigation }: Props) {
       orientation: orientation.trim() || undefined,
     });
     navigation.replace('AddFirstBed', { gardenId: garden.id });
-  };
+  });
 
   return (
     <Screen>

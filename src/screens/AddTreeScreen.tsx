@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, TextField, PrimaryButton, SectionTitle, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
+import { useSingleSubmit } from '../utils/useSingleSubmit';
 import { TreeCategory } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddTree'>;
@@ -16,7 +17,7 @@ export default function AddTreeScreen({ navigation }: Props) {
   const [location, setLocation] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleCreate = async () => {
+  const handleCreate = useSingleSubmit(async () => {
     setSubmitted(true);
     if (!name.trim()) return;
     await addTree({
@@ -27,7 +28,7 @@ export default function AddTreeScreen({ navigation }: Props) {
       plantedAt: new Date().toISOString(),
     });
     navigation.goBack();
-  };
+  });
 
   return (
     <Screen>

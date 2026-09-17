@@ -23,9 +23,11 @@ export function checkCropRotation(
   );
   if (sameSpeciesRecent) {
     const yearsAgo = newYear - sameSpeciesRecent.year;
+    const whenText =
+      yearsAgo === 0 ? 'už letos' : `naposledy před ${yearsAgo} ${yearsAgo === 1 ? 'rokem' : 'lety'}`;
     warnings.push({
       kind: 'same_species',
-      message: `${newSpecies.name} byl(a) v tomto záhonu naposledy před ${yearsAgo} ${yearsAgo === 1 ? 'rokem' : 'lety'}. Doporučujeme počkat aspoň ${SAME_SPECIES_MIN_GAP_YEARS} roky kvůli chorobám a škůdcům vázaným na tento druh.`,
+      message: `${newSpecies.name} byl(a) v tomto záhonu ${whenText}. Doporučujeme počkat aspoň ${SAME_SPECIES_MIN_GAP_YEARS} roky kvůli chorobám a škůdcům vázaným na tento druh.`,
     });
   }
 

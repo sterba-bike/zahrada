@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { Screen, TextField, PrimaryButton, SecondaryButton, SectionTitle, colors } from '../../components/ui';
 import { useAppData } from '../../context/AppDataContext';
+import { useSingleSubmit } from '../../utils/useSingleSubmit';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddFirstBed'>;
 
@@ -14,7 +15,7 @@ export default function AddFirstBedScreen({ navigation }: Props) {
 
   const finish = () => navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
 
-  const handleCreate = async () => {
+  const handleCreate = useSingleSubmit(async () => {
     setSubmitted(true);
     if (!name.trim()) return;
     await addBed({
@@ -23,7 +24,7 @@ export default function AddFirstBedScreen({ navigation }: Props) {
       foundedAt: new Date().toISOString(),
     });
     finish();
-  };
+  });
 
   return (
     <Screen>

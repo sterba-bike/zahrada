@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
+import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, Card, TextField, PrimaryButton, SectionTitle, colors } from '../components/ui';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppData } from '../context/AppDataContext';
+import { useSingleSubmit } from '../utils/useSingleSubmit';
 import { SEED_PLANT_SPECIES } from '../data/seedPlants';
 import { checkCropRotation, checkCompanionPlanting } from '../rules/cropRotation';
 import { DIFFICULTY_LABEL } from '../utils/format';
@@ -16,6 +18,9 @@ export default function AddPlantScreen({ route, navigation }: Props) {
   const { bedHistory, addPlanting } = useAppData();
   const [selected, setSelected] = useState<PlantSpecies | null>(null);
   const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [warning, setWarning] = useState<{ species: PlantSpecies; year: number; message: string } | null>(
+    null
+  );
 
   const history = bedHistory(bedId);
   const currentlyGrowingIds = useMemo(
@@ -23,7 +28,7 @@ export default function AddPlantScreen({ route, navigation }: Props) {
     [history]
   );
 
-  const commitPlanting = async (species: PlantSpecies, yearNum: number) => {
+  const commitPlanting = useSingleSubmit(async (species: PlantSpecies, yearNum: number) => {
     await addPlanting({
       bedId,
       speciesId: species.id,
@@ -32,7 +37,7 @@ export default function AddPlantScreen({ route, navigation }: Props) {
       status: 'roste',
     });
     navigation.goBack();
-  };
+  });
 
   const handleAdd = () => {
     if (!selected) return;
@@ -53,15 +58,7 @@ export default function AddPlantScreen({ route, navigation }: Props) {
       return;
     }
 
-    Alert.alert(
-      'Upozornění před přidáním',
-      allMessages.join('\n\n'),
-      [
-        { text: 'Zrušit', style: 'cancel' },
-        { text: 'Přesto přidat', onPress: () => commitPlanting(selected, yearNum) },
-      ],
-      { cancelable: true }
-    );
+    setWarning({ species: selected, year: yearNum, message: allMessages.join('\n\n') });
   };
 
   return (
@@ -91,6 +88,19 @@ export default function AddPlantScreen({ route, navigation }: Props) {
           <PrimaryButton title="Přidat rostlinu do záhonu" onPress={handleAdd} />
         </Card>
       )}
+
+      <ConfirmDialog
+        visible={!!warning}
+        title="Upozornění před přidáním"
+        message={warning?.message ?? ''}
+        cancelText="Zrušit"
+        confirmText="Přesto přidat"
+        onCancel={() => setWarning(null)}
+        onConfirm={() => {
+          if (warning) commitPlanting(warning.species, warning.year);
+          setWarning(null);
+        }}
+      />
     </Screen>
   );
 }

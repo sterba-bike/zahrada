@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, TextField, PrimaryButton, SecondaryButton, SectionTitle, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
+import { useSingleSubmit } from '../utils/useSingleSubmit';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddJournalEntry'>;
 
@@ -39,7 +40,7 @@ export default function AddJournalEntryScreen({ route, navigation }: Props) {
 
   const canSubmit = !!target && (photoOnly ? !!photoUri : text.trim().length > 0 || !!photoUri);
 
-  const handleSave = async () => {
+  const handleSave = useSingleSubmit(async () => {
     setSubmitted(true);
     if (!canSubmit || !target) return;
     await addJournalEntry({
@@ -50,7 +51,7 @@ export default function AddJournalEntryScreen({ route, navigation }: Props) {
       photoUri,
     });
     navigation.goBack();
-  };
+  });
 
   return (
     <Screen>
