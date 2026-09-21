@@ -34,6 +34,7 @@ interface AppDataActions {
   addBed: (data: Omit<Bed, 'id' | 'gardenId'>) => Promise<Bed>;
   addTree: (data: Omit<Tree, 'id' | 'gardenId'>) => Promise<Tree>;
   addPlanting: (data: Omit<PlantingRecord, 'id'>) => Promise<PlantingRecord>;
+  deletePlanting: (plantingId: string) => Promise<void>;
   addTask: (data: Omit<Task, 'id' | 'done'>) => Promise<Task>;
   completeTask: (taskId: string) => Promise<void>;
   addJournalEntry: (data: Omit<JournalEntry, 'id' | 'lastEditedBy' | 'lastEditedAt'>) => Promise<JournalEntry>;
@@ -142,6 +143,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return newPlanting;
   }, []);
 
+  const deletePlanting = useCallback(async (plantingId: string) => {
+    setPlantings((prev) => {
+      const next = prev.filter((p) => p.id !== plantingId);
+      saveItem(STORAGE_KEYS.plantings, next);
+      return next;
+    });
+  }, []);
+
   const addTask = useCallback(async (data: Omit<Task, 'id' | 'done'>) => {
     const newTask: Task = { ...data, id: generateId(), done: false };
     setTasks((prev) => {
@@ -223,6 +232,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addBed,
       addTree,
       addPlanting,
+      deletePlanting,
       addTask,
       completeTask,
       addJournalEntry,
@@ -244,6 +254,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addBed,
       addTree,
       addPlanting,
+      deletePlanting,
       addTask,
       completeTask,
       addJournalEntry,

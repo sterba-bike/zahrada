@@ -10,6 +10,7 @@ interface Props {
   confirmText: string;
   onCancel?: () => void;
   onConfirm: () => void;
+  danger?: boolean;
 }
 
 // React Native Web nemá vlastní implementaci Alert.alert s víc tlačítky (na webu
@@ -24,6 +25,7 @@ export default function ConfirmDialog({
   confirmText,
   onCancel,
   onConfirm,
+  danger,
 }: Props) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel ?? onConfirm}>
@@ -37,7 +39,10 @@ export default function ConfirmDialog({
                 <Text style={styles.cancelText}>{cancelText}</Text>
               </Pressable>
             )}
-            <Pressable style={[styles.button, styles.confirmButton]} onPress={onConfirm}>
+            <Pressable
+              style={[styles.button, danger ? styles.dangerButton : styles.confirmButton]}
+              onPress={onConfirm}
+            >
               <Text style={styles.confirmText}>{confirmText}</Text>
             </Pressable>
           </View>
@@ -68,6 +73,7 @@ const styles = StyleSheet.create({
   button: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
   cancelButton: { backgroundColor: colors.bg },
   confirmButton: { backgroundColor: colors.primary },
+  dangerButton: { backgroundColor: colors.danger },
   cancelText: { color: colors.text, fontWeight: '600' },
   confirmText: { color: 'white', fontWeight: '700' },
 });

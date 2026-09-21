@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, EmptyState, VarietyTag, colors } from '../components/ui';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppData } from '../context/AppDataContext';
 import { getSpeciesById } from '../data/seedPlants';
 import { BED_TYPE_LABEL, DIFFICULTY_LABEL, formatDate, formatDateTime, taskPlacesLabel } from '../utils/format';
-import { EARLINESS_LABEL } from '../types';
+import { EARLINESS_LABEL, PlantingRecord } from '../types';
 
 type Props = NativeStackScreenProps<ZahradaStackParamList, 'BedDetail'>;
 
 export default function BedDetailScreen({ route, navigation }: Props) {
   const { bedId } = route.params;
-  const { beds, trees, tasks, bedHistory } = useAppData();
+  const { beds, trees, tasks, bedHistory, deletePlanting } = useAppData();
   const bed = beds.find((b) => b.id === bedId);
   const plantings = bedHistory(bedId).sort((a, b) => b.year - a.year);
   const bedTasks = tasks.filter((t) => t.bedIds.includes(bedId));
+  const [toDelete, setToDelete] = useState<PlantingRecord | null>(null);
 
   if (!bed) {
     return (
@@ -51,13 +53,18 @@ export default function BedDetailScreen({ route, navigation }: Props) {
             const species = getSpeciesById(p.speciesId);
             return (
               <Card key={p.id}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.itemName}>{species?.name ?? p.speciesId}</Text>
-                  {p.variety && (
-                    <VarietyTag
-                      variety={p.variety + (p.varietyEarliness ? ` · ${EARLINESS_LABEL[p.varietyEarliness]}` : '')}
-                    />
-                  )}
+                <View style={styles.rowBetween}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.itemName}>{species?.name ?? p.speciesId}</Text>
+                    {p.variety && (
+                      <VarietyTag
+                        variety={p.variety + (p.varietyEarliness ? ` · ${EARLINESS_LABEL[p.varietyEarliness]}` : '')}
+                      />
+                    )}
+                  </View>
+                  <Pressable onPress={() => setToDelete(p)} hitSlop={8}>
+                    <Text style={styles.deleteIcon}>🗑️</Text>
+                  </Pressable>
                 </View>
                 <Text style={styles.itemMeta}>
                   Osazeno {formatDate(p.plantedAt)} · {species ? DIFFICULTY_LABEL[species.difficultyGroup] : ''} ·{' '}
@@ -96,6 +103,22 @@ export default function BedDetailScreen({ route, navigation }: Props) {
         <Text style={styles.addLink}>Otevřít deník →</Text>
       </Pressable>
       <View style={{ height: 24 }} />
+
+      <ConfirmDialog
+        visible={!!toDelete}
+        title="Smazat rostlinu"
+        message={`Opravdu smazat ${
+          toDelete ? getSpeciesById(toDelete.speciesId)?.name ?? toDelete.speciesId : ''
+        } z tohoto záhonu? Tuto akci nejde vrátit zpět.`}
+        cancelText="Zrušit"
+        confirmText="Smazat"
+        danger
+        onCancel={() => setToDelete(null)}
+        onConfirm={() => {
+          if (toDelete) deletePlanting(toDelete.id);
+          setToDelete(null);
+        }}
+      />
     </Screen>
   );
 }
@@ -104,7 +127,9 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', color: colors.text },
   meta: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
   editedBy: { fontSize: 12, color: colors.textMuted, marginTop: 4, fontStyle: 'italic' },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
+  deleteIcon: { fontSize: 18, marginLeft: 8 },
   itemName: { fontSize: 16, fontWeight: '700', color: colors.text },
   itemMeta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   addLink: { color: colors.primary, fontWeight: '600', marginTop: 4, marginBottom: 8 },
