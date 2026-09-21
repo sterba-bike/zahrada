@@ -3,19 +3,24 @@ import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, TextField, PrimaryButton, SectionTitle, HelperNote, colors } from '../components/ui';
+import { DateField } from '../components/DatePicker';
 import { useAppData } from '../context/AppDataContext';
 import { useSingleSubmit } from '../utils/useSingleSubmit';
-import { TreeCategory } from '../types';
+import { EARLINESS_LABEL, EarlinessGroup, TreeCategory } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddTree'>;
+
+const EARLINESS_OPTIONS: EarlinessGroup[] = ['rana', 'polorana', 'pozdni'];
 
 export default function AddTreeScreen({ navigation }: Props) {
   const { addTree } = useAppData();
   const [name, setName] = useState('');
   const [variety, setVariety] = useState('');
+  const [earliness, setEarliness] = useState<EarlinessGroup | undefined>(undefined);
   const [category, setCategory] = useState<TreeCategory>('ovocny');
   const [rootstockType, setRootstockType] = useState('');
   const [location, setLocation] = useState('');
+  const [plantedAt, setPlantedAt] = useState(new Date());
   const [submitted, setSubmitted] = useState(false);
 
   const handleCreate = useSingleSubmit(async () => {
@@ -24,10 +29,11 @@ export default function AddTreeScreen({ navigation }: Props) {
     await addTree({
       name: name.trim(),
       variety: variety.trim() || undefined,
+      varietyEarliness: earliness,
       category,
       rootstockType: rootstockType.trim() || undefined,
       location: location.trim() || undefined,
-      plantedAt: new Date().toISOString(),
+      plantedAt: plantedAt.toISOString(),
     });
     navigation.goBack();
   });
@@ -47,7 +53,22 @@ export default function AddTreeScreen({ navigation }: Props) {
         onChangeText={setVariety}
         placeholder="např. Golden Delicious, Idared"
       />
-      <HelperNote>Zatím se píše ručně - výběr ze seznamu odrůd appka nabídne v budoucí verzi.</HelperNote>
+      <Text style={styles.label}>Ranost odrůdy (volitelné)</Text>
+      <View style={styles.typeRow}>
+        {EARLINESS_OPTIONS.map((e) => (
+          <Pressable
+            key={e}
+            onPress={() => setEarliness(earliness === e ? undefined : e)}
+            style={[styles.typeChip, earliness === e && styles.typeChipActive]}
+          >
+            <Text style={[styles.typeChipText, earliness === e && styles.typeChipTextActive]}>
+              {EARLINESS_LABEL[e]}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <HelperNote>Odrůda i ranost se zatím píší/vybírají ručně - výběr ze seznamu odrůd appka nabídne v budoucí verzi.</HelperNote>
+      <DateField label="Datum vysazení" required value={plantedAt} onChange={setPlantedAt} />
       <Text style={styles.label}>Kategorie</Text>
       <View style={styles.typeRow}>
         {(['ovocny', 'okrasny'] as TreeCategory[]).map((c) => (

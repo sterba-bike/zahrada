@@ -6,15 +6,16 @@ interface Props {
   visible: boolean;
   title: string;
   message: string;
-  cancelText: string;
+  cancelText?: string;
   confirmText: string;
-  onCancel: () => void;
+  onCancel?: () => void;
   onConfirm: () => void;
 }
 
 // React Native Web nemá vlastní implementaci Alert.alert s víc tlačítky (na webu
 // se nic nezobrazí), proto pro potvrzení s víc tlačítky používáme vlastní modál,
-// který funguje stejně na webu i v nativní appce.
+// který funguje stejně na webu i v nativní appce. Bez cancelText/onCancel funguje
+// jako jednoduché informativní oznámení s jedním tlačítkem.
 export default function ConfirmDialog({
   visible,
   title,
@@ -25,15 +26,17 @@ export default function ConfirmDialog({
   onConfirm,
 }: Props) {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel ?? onConfirm}>
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
           <View style={styles.buttonRow}>
-            <Pressable style={[styles.button, styles.cancelButton]} onPress={onCancel}>
-              <Text style={styles.cancelText}>{cancelText}</Text>
-            </Pressable>
+            {cancelText && onCancel && (
+              <Pressable style={[styles.button, styles.cancelButton]} onPress={onCancel}>
+                <Text style={styles.cancelText}>{cancelText}</Text>
+              </Pressable>
+            )}
             <Pressable style={[styles.button, styles.confirmButton]} onPress={onConfirm}>
               <Text style={styles.confirmText}>{confirmText}</Text>
             </Pressable>

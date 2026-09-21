@@ -7,6 +7,7 @@ import { RootStackParamList, MainTabParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, EmptyState, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { getTipForToday } from '../data/ecoTips';
+import { taskPlacesLabel } from '../utils/format';
 import Fab from '../components/Fab';
 import QuickActionSheet from '../components/QuickActionSheet';
 
@@ -29,7 +30,7 @@ function greetingForHour(hour: number): string {
 }
 
 export default function HomeScreen({ navigation }: Props) {
-  const { garden, tasks, completeTask } = useAppData();
+  const { garden, tasks, beds, trees, completeTask } = useAppData();
   const [sheetVisible, setSheetVisible] = useState(false);
 
   const today = new Date();
@@ -60,7 +61,12 @@ export default function HomeScreen({ navigation }: Props) {
         todayTasks.map((t) => (
           <Card key={t.id}>
             <View style={styles.taskRow}>
-              <Text style={styles.taskTitle}>{t.title}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.taskTitle}>{t.title}</Text>
+                {(t.bedIds.length > 0 || t.treeIds.length > 0) && (
+                  <Text style={styles.taskPlaces}>{taskPlacesLabel(t, beds, trees)}</Text>
+                )}
+              </View>
               <Pressable onPress={() => completeTask(t.id)} style={styles.doneButton}>
                 <Text style={styles.doneButtonText}>Hotovo</Text>
               </Pressable>
@@ -96,7 +102,8 @@ const styles = StyleSheet.create({
   weatherLabel: { fontSize: 13, fontWeight: '700', color: colors.textMuted, marginBottom: 4 },
   weatherValue: { fontSize: 14, color: colors.text },
   taskRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  taskTitle: { fontSize: 15, fontWeight: '700', color: colors.text, flex: 1 },
+  taskTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+  taskPlaces: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   doneButton: {
     backgroundColor: colors.accent,
     borderRadius: 10,

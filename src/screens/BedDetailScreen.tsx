@@ -5,16 +5,17 @@ import { RootStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, EmptyState, VarietyTag, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { getSpeciesById } from '../data/seedPlants';
-import { BED_TYPE_LABEL, DIFFICULTY_LABEL, formatDate, formatDateTime } from '../utils/format';
+import { BED_TYPE_LABEL, DIFFICULTY_LABEL, formatDate, formatDateTime, taskPlacesLabel } from '../utils/format';
+import { EARLINESS_LABEL } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BedDetail'>;
 
 export default function BedDetailScreen({ route, navigation }: Props) {
   const { bedId } = route.params;
-  const { beds, tasks, bedHistory } = useAppData();
+  const { beds, trees, tasks, bedHistory } = useAppData();
   const bed = beds.find((b) => b.id === bedId);
   const plantings = bedHistory(bedId).sort((a, b) => b.year - a.year);
-  const bedTasks = tasks.filter((t) => t.bedId === bedId);
+  const bedTasks = tasks.filter((t) => t.bedIds.includes(bedId));
 
   if (!bed) {
     return (
@@ -52,10 +53,15 @@ export default function BedDetailScreen({ route, navigation }: Props) {
               <Card key={p.id}>
                 <View style={styles.nameRow}>
                   <Text style={styles.itemName}>{species?.name ?? p.speciesId}</Text>
-                  {p.variety && <VarietyTag variety={p.variety} />}
+                  {p.variety && (
+                    <VarietyTag
+                      variety={p.variety + (p.varietyEarliness ? ` · ${EARLINESS_LABEL[p.varietyEarliness]}` : '')}
+                    />
+                  )}
                 </View>
                 <Text style={styles.itemMeta}>
-                  Osazeno {p.year} · {species ? DIFFICULTY_LABEL[species.difficultyGroup] : ''} · {p.status}
+                  Osazeno {formatDate(p.plantedAt)} · {species ? DIFFICULTY_LABEL[species.difficultyGroup] : ''} ·{' '}
+                  {p.status}
                 </Text>
               </Card>
             );
@@ -76,6 +82,9 @@ export default function BedDetailScreen({ route, navigation }: Props) {
             <Text style={styles.itemMeta}>
               {formatDate(t.dueDate)} · {t.done ? `Splněno (${t.doneBy})` : 'Nesplněno'}
             </Text>
+            {(t.bedIds.length > 1 || t.treeIds.length > 0) && (
+              <Text style={styles.itemMeta}>{taskPlacesLabel(t, beds, trees)}</Text>
+            )}
           </Card>
         ))
       )}

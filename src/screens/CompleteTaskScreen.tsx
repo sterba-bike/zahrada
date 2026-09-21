@@ -4,12 +4,12 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, EmptyState, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
-import { formatDate } from '../utils/format';
+import { formatDate, taskPlacesLabel } from '../utils/format';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CompleteTask'>;
 
 export default function CompleteTaskScreen({ navigation }: Props) {
-  const { tasks, completeTask } = useAppData();
+  const { tasks, beds, trees, completeTask } = useAppData();
   const open = tasks.filter((t) => !t.done);
 
   const handleComplete = async (id: string) => {
@@ -30,6 +30,11 @@ export default function CompleteTaskScreen({ navigation }: Props) {
               <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
                 Termín: {formatDate(t.dueDate)}
               </Text>
+              {(t.bedIds.length > 0 || t.treeIds.length > 0) && (
+                <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
+                  {taskPlacesLabel(t, beds, trees)}
+                </Text>
+              )}
             </Card>
           </Pressable>
         ))

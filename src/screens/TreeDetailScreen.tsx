@@ -4,15 +4,16 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, VarietyTag, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
-import { formatDate, formatDateTime } from '../utils/format';
+import { formatDate, formatDateTime, taskPlacesLabel } from '../utils/format';
+import { EARLINESS_LABEL } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TreeDetail'>;
 
 export default function TreeDetailScreen({ route, navigation }: Props) {
   const { treeId } = route.params;
-  const { trees, tasks } = useAppData();
+  const { beds, trees, tasks } = useAppData();
   const tree = trees.find((t) => t.id === treeId);
-  const treeTasks = tasks.filter((t) => t.treeId === treeId);
+  const treeTasks = tasks.filter((t) => t.treeIds.includes(treeId));
 
   if (!tree) {
     return (
@@ -26,7 +27,11 @@ export default function TreeDetailScreen({ route, navigation }: Props) {
     <Screen>
       <View style={styles.nameRow}>
         <Text style={styles.title}>{tree.name}</Text>
-        {tree.variety && <VarietyTag variety={tree.variety} />}
+        {tree.variety && (
+          <VarietyTag
+            variety={tree.variety + (tree.varietyEarliness ? ` · ${EARLINESS_LABEL[tree.varietyEarliness]}` : '')}
+          />
+        )}
       </View>
       <Text style={styles.meta}>
         {tree.category === 'ovocny' ? 'Ovocný' : 'Okrasný'} · vysazeno {formatDate(tree.plantedAt)}
@@ -56,6 +61,9 @@ export default function TreeDetailScreen({ route, navigation }: Props) {
             <Text style={styles.itemMeta}>
               {formatDate(t.dueDate)} · {t.done ? `Splněno (${t.doneBy})` : 'Nesplněno'}
             </Text>
+            {(t.bedIds.length > 0 || t.treeIds.length > 1) && (
+              <Text style={styles.itemMeta}>{taskPlacesLabel(t, beds, trees)}</Text>
+            )}
           </Card>
         ))
       )}

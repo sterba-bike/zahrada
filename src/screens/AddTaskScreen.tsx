@@ -23,9 +23,14 @@ export default function AddTaskScreen({ navigation }: Props) {
   const [title, setTitle] = useState('');
   const [type, setType] = useState<TaskType>('zaliti');
   const [dueDate, setDueDate] = useState(new Date().toLocaleDateString('cs-CZ'));
-  const [bedId, setBedId] = useState<string | undefined>(undefined);
-  const [treeId, setTreeId] = useState<string | undefined>(undefined);
+  const [bedIds, setBedIds] = useState<string[]>([]);
+  const [treeIds, setTreeIds] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
+
+  const toggleBed = (id: string) =>
+    setBedIds((prev) => (prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id]));
+  const toggleTree = (id: string) =>
+    setTreeIds((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
 
   const parseDate = (value: string): string => {
     const parts = value.split('.').map((p) => p.trim());
@@ -42,8 +47,8 @@ export default function AddTaskScreen({ navigation }: Props) {
     if (!title.trim()) return;
     await addTask({
       gardenId: garden?.id ?? '',
-      bedId,
-      treeId,
+      bedIds,
+      treeIds,
       title: title.trim(),
       type,
       dueDate: parseDate(dueDate),
@@ -76,30 +81,28 @@ export default function AddTaskScreen({ navigation }: Props) {
 
       {(beds.length > 0 || trees.length > 0) && (
         <>
-          <Text style={styles.label}>Vázat na záhon nebo strom/keř (volitelné)</Text>
+          <Text style={styles.label}>Vázat na záhony nebo stromy/keře (volitelné, lze víc)</Text>
           <View style={styles.chipRow}>
             {beds.map((b) => (
               <Pressable
                 key={b.id}
-                onPress={() => {
-                  setBedId(bedId === b.id ? undefined : b.id);
-                  setTreeId(undefined);
-                }}
-                style={[styles.chip, bedId === b.id && styles.chipActive]}
+                onPress={() => toggleBed(b.id)}
+                style={[styles.chip, bedIds.includes(b.id) && styles.chipActive]}
               >
-                <Text style={[styles.chipText, bedId === b.id && styles.chipTextActive]}>🪴 {b.name}</Text>
+                <Text style={[styles.chipText, bedIds.includes(b.id) && styles.chipTextActive]}>
+                  🪴 {b.name}
+                </Text>
               </Pressable>
             ))}
             {trees.map((t) => (
               <Pressable
                 key={t.id}
-                onPress={() => {
-                  setTreeId(treeId === t.id ? undefined : t.id);
-                  setBedId(undefined);
-                }}
-                style={[styles.chip, treeId === t.id && styles.chipActive]}
+                onPress={() => toggleTree(t.id)}
+                style={[styles.chip, treeIds.includes(t.id) && styles.chipActive]}
               >
-                <Text style={[styles.chipText, treeId === t.id && styles.chipTextActive]}>🌳 {t.name}</Text>
+                <Text style={[styles.chipText, treeIds.includes(t.id) && styles.chipTextActive]}>
+                  🌳 {t.name}
+                </Text>
               </Pressable>
             ))}
           </View>
