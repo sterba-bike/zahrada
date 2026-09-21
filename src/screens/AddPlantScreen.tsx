@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { Screen, Card, TextField, PrimaryButton, SectionTitle, colors } from '../components/ui';
+import { Screen, Card, TextField, PrimaryButton, SectionTitle, HelperNote, colors } from '../components/ui';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppData } from '../context/AppDataContext';
 import { useSingleSubmit } from '../utils/useSingleSubmit';
@@ -13,14 +13,26 @@ import { PlantSpecies } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddPlant'>;
 
+// Jen pár ukázkových odrůd pro placeholder v poli - ne reálný seznam k výběru.
+const VARIETY_PLACEHOLDER: Record<string, string> = {
+  rajce: 'Cherry, Roma, Volovské srdce',
+  okurka: 'Nohel, Marinda',
+  jahody: 'Elsanta, Malwina',
+  brambory: 'Rosara, Adéla',
+};
+
 export default function AddPlantScreen({ route, navigation }: Props) {
   const { bedId } = route.params;
   const { bedHistory, addPlanting } = useAppData();
   const [selected, setSelected] = useState<PlantSpecies | null>(null);
   const [year, setYear] = useState(String(new Date().getFullYear()));
-  const [warning, setWarning] = useState<{ species: PlantSpecies; year: number; message: string } | null>(
-    null
-  );
+  const [variety, setVariety] = useState('');
+  const [warning, setWarning] = useState<{
+    species: PlantSpecies;
+    year: number;
+    variety: string;
+    message: string;
+  } | null>(null);
 
   const history = bedHistory(bedId);
   const currentlyGrowingIds = useMemo(
@@ -28,16 +40,19 @@ export default function AddPlantScreen({ route, navigation }: Props) {
     [history]
   );
 
-  const commitPlanting = useSingleSubmit(async (species: PlantSpecies, yearNum: number) => {
-    await addPlanting({
-      bedId,
-      speciesId: species.id,
-      plantedAt: new Date().toISOString(),
-      year: yearNum,
-      status: 'roste',
-    });
-    navigation.goBack();
-  });
+  const commitPlanting = useSingleSubmit(
+    async (species: PlantSpecies, yearNum: number, varietyName: string) => {
+      await addPlanting({
+        bedId,
+        speciesId: species.id,
+        plantedAt: new Date().toISOString(),
+        year: yearNum,
+        status: 'roste',
+        variety: varietyName.trim() || undefined,
+      });
+      navigation.goBack();
+    }
+  );
 
   const handleAdd = () => {
     if (!selected) return;
@@ -54,11 +69,11 @@ export default function AddPlantScreen({ route, navigation }: Props) {
     ];
 
     if (allMessages.length === 0) {
-      commitPlanting(selected, yearNum);
+      commitPlanting(selected, yearNum, variety);
       return;
     }
 
-    setWarning({ species: selected, year: yearNum, message: allMessages.join('\n\n') });
+    setWarning({ species: selected, year: yearNum, variety, message: allMessages.join('\n\n') });
   };
 
   return (
@@ -68,7 +83,10 @@ export default function AddPlantScreen({ route, navigation }: Props) {
         {SEED_PLANT_SPECIES.map((sp) => (
           <Pressable
             key={sp.id}
-            onPress={() => setSelected(sp)}
+            onPress={() => {
+              setSelected(sp);
+              setVariety('');
+            }}
             style={[styles.chip, selected?.id === sp.id && styles.chipActive]}
           >
             <Text style={[styles.chipText, selected?.id === sp.id && styles.chipTextActive]}>
@@ -84,6 +102,13 @@ export default function AddPlantScreen({ route, navigation }: Props) {
           <Text style={styles.detailMeta}>{DIFFICULTY_LABEL[selected.difficultyGroup]}</Text>
           <Text style={styles.detailMeta}>Světlo: {selected.lightNeeds}</Text>
           <Text style={styles.detailMeta}>Voda: {selected.waterNeeds}</Text>
+          <TextField
+            label="Odrůda (volitelné)"
+            value={variety}
+            onChangeText={setVariety}
+            placeholder={`např. ${VARIETY_PLACEHOLDER[selected.id] ?? 'konkrétní odrůda'}`}
+          />
+          <HelperNote>Zatím se píše ručně - výběr ze seznamu odrůd appka nabídne v budoucí verzi.</HelperNote>
           <TextField label="Rok osazení" required value={year} onChangeText={setYear} keyboardType="number-pad" />
           <PrimaryButton title="Přidat rostlinu do záhonu" onPress={handleAdd} />
         </Card>
@@ -97,7 +122,7 @@ export default function AddPlantScreen({ route, navigation }: Props) {
         confirmText="Přesto přidat"
         onCancel={() => setWarning(null)}
         onConfirm={() => {
-          if (warning) commitPlanting(warning.species, warning.year);
+          if (warning) commitPlanting(warning.species, warning.year, warning.variety);
           setWarning(null);
         }}
       />

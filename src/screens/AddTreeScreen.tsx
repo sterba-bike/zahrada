@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { Screen, TextField, PrimaryButton, SectionTitle, colors } from '../components/ui';
+import { Screen, TextField, PrimaryButton, SectionTitle, HelperNote, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { useSingleSubmit } from '../utils/useSingleSubmit';
 import { TreeCategory } from '../types';
@@ -12,6 +12,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AddTree'>;
 export default function AddTreeScreen({ navigation }: Props) {
   const { addTree } = useAppData();
   const [name, setName] = useState('');
+  const [variety, setVariety] = useState('');
   const [category, setCategory] = useState<TreeCategory>('ovocny');
   const [rootstockType, setRootstockType] = useState('');
   const [location, setLocation] = useState('');
@@ -22,6 +23,7 @@ export default function AddTreeScreen({ navigation }: Props) {
     if (!name.trim()) return;
     await addTree({
       name: name.trim(),
+      variety: variety.trim() || undefined,
       category,
       rootstockType: rootstockType.trim() || undefined,
       location: location.trim() || undefined,
@@ -33,12 +35,19 @@ export default function AddTreeScreen({ navigation }: Props) {
   return (
     <Screen>
       <SectionTitle>Nový strom / keř</SectionTitle>
-      <TextField label="Název" required value={name} onChangeText={setName} placeholder="např. Jabloň Golden" />
+      <TextField label="Název" required value={name} onChangeText={setName} placeholder="např. Jabloň" />
       {submitted && !name.trim() && (
         <Text style={{ color: colors.danger, marginTop: -10, marginBottom: 10, fontSize: 13 }}>
           Vyplňte prosím název.
         </Text>
       )}
+      <TextField
+        label="Odrůda (volitelné)"
+        value={variety}
+        onChangeText={setVariety}
+        placeholder="např. Golden Delicious, Idared"
+      />
+      <HelperNote>Zatím se píše ručně - výběr ze seznamu odrůd appka nabídne v budoucí verzi.</HelperNote>
       <Text style={styles.label}>Kategorie</Text>
       <View style={styles.typeRow}>
         {(['ovocny', 'okrasny'] as TreeCategory[]).map((c) => (

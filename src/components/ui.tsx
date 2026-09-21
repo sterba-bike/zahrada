@@ -122,6 +122,18 @@ export function TextField({
   );
 }
 
+export function VarietyTag({ variety }: { variety: string }) {
+  return (
+    <View style={styles.varietyTag}>
+      <Text style={styles.varietyTagText}>{variety}</Text>
+    </View>
+  );
+}
+
+export function HelperNote({ children }: { children: React.ReactNode }) {
+  return <Text style={styles.helperNote}>{children}</Text>;
+}
+
 export function EmptyState({
   text,
   buttonTitle,
@@ -200,5 +212,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: 'center',
     marginBottom: 14,
+  },
+  varietyTag: {
+    backgroundColor: '#EAF3E8',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignSelf: 'flex-start',
+  },
+  varietyTagText: {
+    color: colors.primaryDark,
+    fontSize: 12,
+    fontWeight: '700',
+    fontStyle: 'italic',
+  },
+  helperNote: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 14,
+    lineHeight: 16,
   },
 });

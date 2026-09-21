@@ -44,6 +44,7 @@ export interface Tree {
   location?: string;
   status?: string;
   note?: string;
+  variety?: string; // odrůda - zatím volný text, do budoucna výběr z nabídky
   photoUri?: string;
   lastEditedBy?: string;
   lastEditedAt?: string;
@@ -84,6 +85,7 @@ export interface PlantingRecord {
   plantedAt: string;
   year: number; // rok osazení - pro kontrolu opakování
   status: string;
+  variety?: string; // odrůda - zatím volný text, do budoucna výběr z nabídky
   note?: string;
 }
 

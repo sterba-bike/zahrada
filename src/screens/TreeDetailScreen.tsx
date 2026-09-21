@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { Screen, Card, SectionTitle, colors } from '../components/ui';
+import { Screen, Card, SectionTitle, VarietyTag, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { formatDate, formatDateTime } from '../utils/format';
 
@@ -24,7 +24,10 @@ export default function TreeDetailScreen({ route, navigation }: Props) {
 
   return (
     <Screen>
-      <Text style={styles.title}>{tree.name}</Text>
+      <View style={styles.nameRow}>
+        <Text style={styles.title}>{tree.name}</Text>
+        {tree.variety && <VarietyTag variety={tree.variety} />}
+      </View>
       <Text style={styles.meta}>
         {tree.category === 'ovocny' ? 'Ovocný' : 'Okrasný'} · vysazeno {formatDate(tree.plantedAt)}
       </Text>
@@ -69,6 +72,7 @@ export default function TreeDetailScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { fontSize: 22, fontWeight: '800', color: colors.text },
   meta: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
   editedBy: { fontSize: 12, color: colors.textMuted, marginTop: 4, fontStyle: 'italic' },

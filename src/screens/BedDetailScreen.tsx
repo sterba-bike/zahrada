@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { Screen, Card, SectionTitle, EmptyState, colors } from '../components/ui';
+import { Screen, Card, SectionTitle, EmptyState, VarietyTag, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { getSpeciesById } from '../data/seedPlants';
 import { BED_TYPE_LABEL, DIFFICULTY_LABEL, formatDate, formatDateTime } from '../utils/format';
@@ -50,7 +50,10 @@ export default function BedDetailScreen({ route, navigation }: Props) {
             const species = getSpeciesById(p.speciesId);
             return (
               <Card key={p.id}>
-                <Text style={styles.itemName}>{species?.name ?? p.speciesId}</Text>
+                <View style={styles.nameRow}>
+                  <Text style={styles.itemName}>{species?.name ?? p.speciesId}</Text>
+                  {p.variety && <VarietyTag variety={p.variety} />}
+                </View>
                 <Text style={styles.itemMeta}>
                   Osazeno {p.year} · {species ? DIFFICULTY_LABEL[species.difficultyGroup] : ''} · {p.status}
                 </Text>
@@ -92,6 +95,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', color: colors.text },
   meta: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
   editedBy: { fontSize: 12, color: colors.textMuted, marginTop: 4, fontStyle: 'italic' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   itemName: { fontSize: 16, fontWeight: '700', color: colors.text },
   itemMeta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   addLink: { color: colors.primary, fontWeight: '600', marginTop: 4, marginBottom: 8 },

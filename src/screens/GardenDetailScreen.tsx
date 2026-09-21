@@ -4,7 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { RootStackParamList, MainTabParamList } from '../navigation/types';
-import { Screen, Card, SectionTitle, EmptyState, colors } from '../components/ui';
+import { Screen, Card, SectionTitle, EmptyState, VarietyTag, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { BED_TYPE_LABEL, formatDate } from '../utils/format';
 
@@ -58,7 +58,10 @@ export default function GardenDetailScreen({ navigation }: Props) {
           {trees.map((tree) => (
             <Pressable key={tree.id} onPress={() => navigation.navigate('TreeDetail', { treeId: tree.id })}>
               <Card>
-                <Text style={styles.itemName}>{tree.name}</Text>
+                <View style={styles.nameRow}>
+                  <Text style={styles.itemName}>{tree.name}</Text>
+                  {tree.variety && <VarietyTag variety={tree.variety} />}
+                </View>
                 <Text style={styles.itemMeta}>
                   {tree.category === 'ovocny' ? 'Ovocný' : 'Okrasný'} · vysazeno {formatDate(tree.plantedAt)}
                 </Text>
@@ -78,6 +81,7 @@ export default function GardenDetailScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   gardenName: { fontSize: 24, fontWeight: '800', color: colors.text },
   gardenLocation: { fontSize: 14, color: colors.textMuted, marginBottom: 8 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   itemName: { fontSize: 16, fontWeight: '700', color: colors.text },
   itemMeta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   addLink: { color: colors.primary, fontWeight: '600', marginTop: 4, marginBottom: 8 },
