@@ -14,10 +14,11 @@ export const TASK_TEMPLATES_BY_SPECIES: Record<string, TaskTemplate[]> = {
     { offsetDays: 14, type: 'hnojeni', title: 'Přihnojit rajčata' },
     { offsetDays: 21, type: 'orez', title: 'Vyštipovat zálistky u rajčat' },
   ],
-  okurka: [{ offsetDays: 14, type: 'hnojeni', title: 'Přihnojit okurky' }],
+  okurka_salatovka: [{ offsetDays: 14, type: 'hnojeni', title: 'Přihnojit okurky' }],
+  okurka_nakladacka: [{ offsetDays: 14, type: 'hnojeni', title: 'Přihnojit okurky' }],
   brambory: [{ offsetDays: 21, type: 'jine', title: 'Prvně přihrnout brambory' }],
   mrkev: [{ offsetDays: 21, type: 'jine', title: 'Prořídit sazenice mrkve' }],
-  fazol: [{ offsetDays: 10, type: 'jine', title: 'Zkontrolovat oporu pro fazol' }],
+  fazol_tyckovy: [{ offsetDays: 10, type: 'jine', title: 'Zkontrolovat oporu pro fazol' }],
 };
 
 export function getTaskTemplates(speciesId: string): TaskTemplate[] {

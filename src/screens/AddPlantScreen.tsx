@@ -18,7 +18,8 @@ type Props = NativeStackScreenProps<ZahradaStackParamList, 'AddPlant'>;
 // Jen pár ukázkových odrůd pro placeholder v poli - ne reálný seznam k výběru.
 const VARIETY_PLACEHOLDER: Record<string, string> = {
   rajce: 'Cherry, Roma, Volovské srdce',
-  okurka: 'Nohel, Marinda',
+  okurka_salatovka: 'Sandra, Daniela',
+  okurka_nakladacka: 'Vega, Regina',
   jahody: 'Elsanta, Malwina',
   brambory: 'Rosara, Adéla',
 };
