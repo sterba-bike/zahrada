@@ -11,9 +11,11 @@ import { SEED_PLANT_SPECIES } from '../data/seedPlants';
 import { checkCropRotation, checkCompanionPlanting } from '../rules/cropRotation';
 import { getTaskTemplates } from '../data/taskTemplates';
 import { DIFFICULTY_LABEL, formatDate } from '../utils/format';
-import { EARLINESS_LABEL, EarlinessGroup, PlantSpecies } from '../types';
+import { EARLINESS_LABEL, EarlinessGroup, PlantSpecies, SPECIES_CATEGORY_LABEL, SpeciesCategory } from '../types';
 
 type Props = NativeStackScreenProps<ZahradaStackParamList, 'AddPlant'>;
+
+const CATEGORY_ORDER: SpeciesCategory[] = ['zelenina', 'bylinka', 'kvetina'];
 
 // Jen pár ukázkových odrůd pro placeholder v poli - ne reálný seznam k výběru.
 const VARIETY_PLACEHOLDER: Record<string, string> = {
@@ -42,6 +44,15 @@ export default function AddPlantScreen({ route, navigation }: Props) {
   const [earliness, setEarliness] = useState<EarlinessGroup | undefined>(undefined);
   const [warning, setWarning] = useState<{ pending: PendingPlanting; message: string } | null>(null);
   const [autoTasksNotice, setAutoTasksNotice] = useState<string | null>(null);
+
+  const speciesByCategory = useMemo(
+    () =>
+      CATEGORY_ORDER.map((category) => ({
+        category,
+        species: SEED_PLANT_SPECIES.filter((sp) => sp.category === category),
+      })).filter((group) => group.species.length > 0),
+    []
+  );
 
   const history = bedHistory(bedId);
   const currentlyGrowingIds = useMemo(
@@ -110,23 +121,28 @@ export default function AddPlantScreen({ route, navigation }: Props) {
   return (
     <Screen>
       <SectionTitle>Vybrat rostlinu</SectionTitle>
-      <View style={styles.grid}>
-        {SEED_PLANT_SPECIES.map((sp) => (
-          <Pressable
-            key={sp.id}
-            onPress={() => {
-              setSelected(sp);
-              setVariety('');
-              setEarliness(undefined);
-            }}
-            style={[styles.chip, selected?.id === sp.id && styles.chipActive]}
-          >
-            <Text style={[styles.chipText, selected?.id === sp.id && styles.chipTextActive]}>
-              {sp.name}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      {speciesByCategory.map(({ category, species }) => (
+        <View key={category} style={{ marginBottom: 12 }}>
+          <Text style={styles.categoryLabel}>{SPECIES_CATEGORY_LABEL[category]}</Text>
+          <View style={styles.grid}>
+            {species.map((sp) => (
+              <Pressable
+                key={sp.id}
+                onPress={() => {
+                  setSelected(sp);
+                  setVariety('');
+                  setEarliness(undefined);
+                }}
+                style={[styles.chip, selected?.id === sp.id && styles.chipActive]}
+              >
+                <Text style={[styles.chipText, selected?.id === sp.id && styles.chipTextActive]}>
+                  {sp.name}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      ))}
 
       {selected && (
         <Card style={{ marginTop: 16 }}>
@@ -188,6 +204,13 @@ export default function AddPlantScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
+  categoryLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 14,

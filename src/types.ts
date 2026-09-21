@@ -73,9 +73,18 @@ export interface BadCompanion {
   reason: string;
 }
 
+export type SpeciesCategory = 'zelenina' | 'bylinka' | 'kvetina';
+
+export const SPECIES_CATEGORY_LABEL: Record<SpeciesCategory, string> = {
+  zelenina: 'Zelenina',
+  bylinka: 'Bylinky',
+  kvetina: 'Květiny',
+};
+
 export interface PlantSpecies {
   id: string;
   name: string;
+  category: SpeciesCategory;
   difficultyGroup: DifficultyGroup;
   lightNeeds: string;
   waterNeeds: string;

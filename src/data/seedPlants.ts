@@ -8,6 +8,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'bazalka',
     name: 'Bazalka',
+    category: 'bylinka',
     difficultyGroup: 'mene_narocna',
     lightNeeds: 'Plné slunce, teplo',
     waterNeeds: 'Pravidelná, mírná',
@@ -19,6 +20,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'brambory',
     name: 'Brambory',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Střední, důležité v době tvorby hlíz',
@@ -35,6 +37,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'celer',
     name: 'Celer',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Vysoká, pravidelná',
@@ -49,6 +52,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'cibule',
     name: 'Cibule',
+    category: 'zelenina',
     difficultyGroup: 'stredne_narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Střední',
@@ -64,6 +68,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'cuketa',
     name: 'Cuketa',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Vysoká, pravidelná',
@@ -75,6 +80,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'cesnek',
     name: 'Česnek',
+    category: 'zelenina',
     difficultyGroup: 'stredne_narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Nízká až střední',
@@ -90,6 +96,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'dyne',
     name: 'Dýně',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce, hodně prostoru',
     waterNeeds: 'Vysoká, pravidelná',
@@ -101,6 +108,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'fazol_kerickovy',
     name: 'Fazol keříčkový',
+    category: 'zelenina',
     difficultyGroup: 'luskovina',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Střední',
@@ -115,6 +123,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'fazol_tyckovy',
     name: 'Fazol tyčkový',
+    category: 'zelenina',
     difficultyGroup: 'luskovina',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Střední',
@@ -129,6 +138,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'hrach',
     name: 'Hrách',
+    category: 'zelenina',
     difficultyGroup: 'luskovina',
     lightNeeds: 'Plné slunce až polostín',
     waterNeeds: 'Střední',
@@ -143,6 +153,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'jahody',
     name: 'Jahody',
+    category: 'zelenina',
     difficultyGroup: 'mene_narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Pravidelná, mírná',
@@ -157,6 +168,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'kapusta',
     name: 'Kapusta',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Pravidelná, vysoká',
@@ -171,6 +183,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'kapusta_ruzickova',
     name: 'Kapusta růžičková',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Pravidelná, vysoká',
@@ -185,6 +198,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'kedlubna',
     name: 'Kedlubna',
+    category: 'zelenina',
     difficultyGroup: 'stredne_narocna',
     lightNeeds: 'Plné slunce až polostín',
     waterNeeds: 'Pravidelná',
@@ -199,6 +213,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'lilek',
     name: 'Lilek',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce, hodně tepla',
     waterNeeds: 'Pravidelná',
@@ -208,8 +223,33 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
     source: 'Ručně zpracováno',
   },
   {
+    id: 'mata',
+    name: 'Máta',
+    category: 'bylinka',
+    difficultyGroup: 'mene_narocna',
+    lightNeeds: 'Polostín až slunce',
+    waterNeeds: 'Pravidelná, vyšší - má ráda vlhčí půdu',
+    goodCompanions: ['kapusta', 'zeli'],
+    badCompanions: [],
+    commonMistakes: 'Bez zábrany (např. zapuštěný květináč) invazivně přerůstá kořenovými výběžky do celého záhonu.',
+    source: 'Ručně zpracováno',
+  },
+  {
+    id: 'medunka',
+    name: 'Meduňka',
+    category: 'bylinka',
+    difficultyGroup: 'mene_narocna',
+    lightNeeds: 'Plné slunce až polostín',
+    waterNeeds: 'Pravidelná, mírná',
+    goodCompanions: ['rajce', 'paprika'],
+    badCompanions: [],
+    commonMistakes: 'Silně se šíří kořenovými výběžky bez zábrany, přílišné sucho oslabuje vůni silic.',
+    source: 'Ručně zpracováno',
+  },
+  {
     id: 'meloun',
     name: 'Meloun',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce, hodně tepla',
     waterNeeds: 'Vysoká, pravidelná',
@@ -221,6 +261,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'mrkev',
     name: 'Mrkev',
+    category: 'zelenina',
     difficultyGroup: 'stredne_narocna',
     lightNeeds: 'Plné slunce až polostín',
     waterNeeds: 'Pravidelná, mírná',
@@ -232,6 +273,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'okurka_nakladacka',
     name: 'Okurka nakládačka',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce, ochrana před větrem',
     waterNeeds: 'Vysoká, pravidelná a rovnoměrná',
@@ -243,6 +285,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'okurka_salatovka',
     name: 'Okurka salátovka',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce, ochrana před větrem',
     waterNeeds: 'Vysoká, pravidelná',
@@ -254,6 +297,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'paprika',
     name: 'Paprika',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce, teplo',
     waterNeeds: 'Střední, pravidelná',
@@ -265,6 +309,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'patizon',
     name: 'Patizon',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Vysoká, pravidelná',
@@ -276,6 +321,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'petrzel',
     name: 'Petržel kořenová',
+    category: 'zelenina',
     difficultyGroup: 'stredne_narocna',
     lightNeeds: 'Plné slunce až polostín',
     waterNeeds: 'Pravidelná',
@@ -287,6 +333,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'petrzel_listova',
     name: 'Petržel listová',
+    category: 'zelenina',
     difficultyGroup: 'mene_narocna',
     lightNeeds: 'Plné slunce až polostín',
     waterNeeds: 'Pravidelná',
@@ -298,6 +345,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'rajce',
     name: 'Rajče',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Pravidelná, vyhýbat se listům',
@@ -313,6 +361,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'redkvicka',
     name: 'Ředkvička',
+    category: 'zelenina',
     difficultyGroup: 'mene_narocna',
     lightNeeds: 'Plné slunce až polostín',
     waterNeeds: 'Pravidelná, mírná',
@@ -324,6 +373,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'salat',
     name: 'Salát',
+    category: 'zelenina',
     difficultyGroup: 'mene_narocna',
     lightNeeds: 'Polostín v létě, slunce na jaře/podzim',
     waterNeeds: 'Pravidelná, mírná',
@@ -335,6 +385,7 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
   {
     id: 'spenat',
     name: 'Špenát',
+    category: 'zelenina',
     difficultyGroup: 'mene_narocna',
     lightNeeds: 'Polostín',
     waterNeeds: 'Pravidelná',
@@ -344,8 +395,21 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
     source: 'Ručně zpracováno',
   },
   {
+    id: 'tymian',
+    name: 'Tymián',
+    category: 'bylinka',
+    difficultyGroup: 'mene_narocna',
+    lightNeeds: 'Plné slunce',
+    waterNeeds: 'Nízká, snáší sucho',
+    goodCompanions: ['kapusta', 'zeli'],
+    badCompanions: [],
+    commonMistakes: 'Přemokření a těžká půda způsobují hnilobu kořenů, přehnojení dusíkem oslabuje vůni silic.',
+    source: 'Ručně zpracováno',
+  },
+  {
     id: 'zeli',
     name: 'Zelí',
+    category: 'zelenina',
     difficultyGroup: 'narocna',
     lightNeeds: 'Plné slunce',
     waterNeeds: 'Pravidelná, vysoká',
