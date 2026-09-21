@@ -1,17 +1,12 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { CompositeScreenProps } from '@react-navigation/native';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { RootStackParamList, MainTabParamList } from '../navigation/types';
+import { ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, EmptyState, VarietyTag, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { BED_TYPE_LABEL, formatDate } from '../utils/format';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'Zahrada'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+type Props = NativeStackScreenProps<ZahradaStackParamList, 'GardenDetail'>;
 
 export default function GardenDetailScreen({ navigation }: Props) {
   const { garden, beds, trees } = useAppData();

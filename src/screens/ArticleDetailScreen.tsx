@@ -1,11 +1,11 @@
 import React from 'react';
 import { Text, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { EkoStackParamList } from '../navigation/types';
 import { Screen, colors } from '../components/ui';
 import { getArticleById } from '../data/articles';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'ArticleDetail'>;
+type Props = NativeStackScreenProps<EkoStackParamList, 'ArticleDetail'>;
 
 export default function ArticleDetailScreen({ route }: Props) {
   const article = getArticleById(route.params.articleId);

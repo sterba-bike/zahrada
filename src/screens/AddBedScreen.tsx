@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { ZahradaStackParamList } from '../navigation/types';
 import { Screen, TextField, PrimaryButton, SectionTitle, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { useSingleSubmit } from '../utils/useSingleSubmit';
 import { BedType } from '../types';
 import { BED_TYPE_LABEL } from '../utils/format';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'AddBed'>;
+type Props = NativeStackScreenProps<ZahradaStackParamList, 'AddBed'>;
 
 const TYPES: BedType[] = ['zeleninovy', 'bylinkovy', 'kvetinovy', 'jiny'];
 

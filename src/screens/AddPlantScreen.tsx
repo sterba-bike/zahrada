@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, TextField, PrimaryButton, SectionTitle, HelperNote, colors } from '../components/ui';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { DateField } from '../components/DatePicker';
@@ -13,7 +13,7 @@ import { getTaskTemplates } from '../data/taskTemplates';
 import { DIFFICULTY_LABEL, formatDate } from '../utils/format';
 import { EARLINESS_LABEL, EarlinessGroup, PlantSpecies } from '../types';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'AddPlant'>;
+type Props = NativeStackScreenProps<ZahradaStackParamList, 'AddPlant'>;
 
 // Jen pár ukázkových odrůd pro placeholder v poli - ne reálný seznam k výběru.
 const VARIETY_PLACEHOLDER: Record<string, string> = {

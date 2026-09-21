@@ -1,12 +1,18 @@
 import React from 'react';
 import { Image, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import { RootStackParamList, ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, EmptyState, PrimaryButton, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { formatDateTime } from '../utils/format';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Journal'>;
+// Deník žije uvnitř Zahrada stacku, ale přidání záznamu (AddJournalEntry) je
+// globální obrazovka na kořenovém stacku - proto kombinovaný typ navigace.
+type Props = CompositeScreenProps<
+  NativeStackScreenProps<ZahradaStackParamList, 'Journal'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
 
 export default function JournalScreen({ route, navigation }: Props) {
   const { bedId, treeId, title } = route.params;

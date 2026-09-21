@@ -1,16 +1,11 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
-import type { CompositeScreenProps } from '@react-navigation/native';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList, MainTabParamList } from '../navigation/types';
+import { EkoStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, colors } from '../components/ui';
 import { ARTICLES } from '../data/articles';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'Eko'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+type Props = NativeStackScreenProps<EkoStackParamList, 'EkoHome'>;
 
 const TOPICS: { label: string; emoji: string }[] = [
   { label: 'Kompostování', emoji: '🍂' },

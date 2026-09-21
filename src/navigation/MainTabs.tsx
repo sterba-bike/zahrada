@@ -4,9 +4,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from './types';
 import { colors } from '../components/ui';
 import HomeScreen from '../screens/HomeScreen';
-import GardenDetailScreen from '../screens/GardenDetailScreen';
+import ZahradaStack from './ZahradaStack';
 import CalendarScreen from '../screens/CalendarScreen';
-import EkoScreen from '../screens/EkoScreen';
+import EkoStack from './EkoStack';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -30,9 +30,9 @@ export default function MainTabs() {
       })}
     >
       <Tab.Screen name="Domů" component={HomeScreen} />
-      <Tab.Screen name="Zahrada" component={GardenDetailScreen} />
+      <Tab.Screen name="Zahrada" component={ZahradaStack} />
       <Tab.Screen name="Kalendář" component={CalendarScreen} />
-      <Tab.Screen name="Eko" component={EkoScreen} />
+      <Tab.Screen name="Eko" component={EkoStack} />
       <Tab.Screen name="Profil" component={ProfileScreen} />
     </Tab.Navigator>
   );

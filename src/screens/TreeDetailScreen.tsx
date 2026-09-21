@@ -1,13 +1,13 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, VarietyTag, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { formatDate, formatDateTime, taskPlacesLabel } from '../utils/format';
 import { EARLINESS_LABEL } from '../types';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'TreeDetail'>;
+type Props = NativeStackScreenProps<ZahradaStackParamList, 'TreeDetail'>;
 
 export default function TreeDetailScreen({ route, navigation }: Props) {
   const { treeId } = route.params;

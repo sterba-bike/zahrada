@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { ZahradaStackParamList } from '../navigation/types';
 import { Screen, TextField, PrimaryButton, SectionTitle, HelperNote, colors } from '../components/ui';
 import { DateField } from '../components/DatePicker';
 import { useAppData } from '../context/AppDataContext';
 import { useSingleSubmit } from '../utils/useSingleSubmit';
 import { EARLINESS_LABEL, EarlinessGroup, TreeCategory } from '../types';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'AddTree'>;
+type Props = NativeStackScreenProps<ZahradaStackParamList, 'AddTree'>;
 
 const EARLINESS_OPTIONS: EarlinessGroup[] = ['rana', 'polorana', 'pozdni'];
 

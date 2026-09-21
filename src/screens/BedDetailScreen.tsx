@@ -1,14 +1,14 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, EmptyState, VarietyTag, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { getSpeciesById } from '../data/seedPlants';
 import { BED_TYPE_LABEL, DIFFICULTY_LABEL, formatDate, formatDateTime, taskPlacesLabel } from '../utils/format';
 import { EARLINESS_LABEL } from '../types';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'BedDetail'>;
+type Props = NativeStackScreenProps<ZahradaStackParamList, 'BedDetail'>;
 
 export default function BedDetailScreen({ route, navigation }: Props) {
   const { bedId } = route.params;
