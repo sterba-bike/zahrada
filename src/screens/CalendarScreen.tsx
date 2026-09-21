@@ -73,13 +73,13 @@ export default function CalendarScreen({ navigation }: Props) {
       </View>
 
       {grouped.length === 0 ? (
-        <EmptyState text="Zatím tu nemáte žádné úkoly." />
+        <EmptyState text="Zatím tu nemáte žádné úkoly - přidejte první a pusťte se do zahrady! 🌱" />
       ) : (
         grouped.map(([day, dayTasks]) => (
           <View key={day} style={{ marginBottom: 8 }}>
             <Text style={styles.dayHeading}>{day}</Text>
             {dayTasks.map((t) => (
-              <Card key={t.id}>
+              <Card key={t.id} style={t.done ? styles.taskCardDone : undefined}>
                 <View style={styles.taskRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.taskTitle, t.done && styles.taskDone]}>{t.title}</Text>
@@ -89,7 +89,7 @@ export default function CalendarScreen({ navigation }: Props) {
                     </Text>
                     {t.done && (
                       <Text style={styles.taskMeta}>
-                        Splnil(a) {t.doneBy} · {t.doneAt ? formatDate(t.doneAt) : ''}
+                        ✓ Splnil(a) {t.doneBy} · {t.doneAt ? formatDate(t.doneAt) : ''}
                       </Text>
                     )}
                   </View>
@@ -137,14 +137,15 @@ const styles = StyleSheet.create({
   chipTextActive: { color: 'white' },
   dayHeading: { fontSize: 14, fontWeight: '700', color: colors.textMuted, marginBottom: 6, marginTop: 6 },
   taskRow: { flexDirection: 'row', alignItems: 'center' },
+  taskCardDone: { backgroundColor: colors.primarySoft, borderColor: colors.primarySoft },
   taskTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   taskDone: { textDecorationLine: 'line-through', color: colors.textMuted },
   taskMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   doneButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  doneButtonText: { color: 'white', fontWeight: '700', fontSize: 12 },
+  doneButtonText: { color: colors.primaryDark, fontWeight: '800', fontSize: 12 },
 });

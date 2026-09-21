@@ -12,7 +12,12 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
-const TOPICS = ['Kompostování', 'Mulčování', 'Přírodní ochrana', 'Biodiverzita'];
+const TOPICS: { label: string; emoji: string }[] = [
+  { label: 'Kompostování', emoji: '🍂' },
+  { label: 'Mulčování', emoji: '🌾' },
+  { label: 'Přírodní ochrana', emoji: '🐞' },
+  { label: 'Biodiverzita', emoji: '🦋' },
+];
 
 export default function EkoScreen({ navigation }: Props) {
   return (
@@ -21,9 +26,13 @@ export default function EkoScreen({ navigation }: Props) {
 
       <SectionTitle>Témata</SectionTitle>
       <View style={styles.topicGrid}>
-        {TOPICS.map((topic) => (
-          <View key={topic} style={styles.topicTile}>
-            <Text style={styles.topicText}>{topic}</Text>
+        {TOPICS.map((topic, i) => (
+          <View
+            key={topic.label}
+            style={[styles.topicTile, i % 2 === 1 && styles.topicTileAlt]}
+          >
+            <Text style={styles.topicEmoji}>{topic.emoji}</Text>
+            <Text style={styles.topicText}>{topic.label}</Text>
           </View>
         ))}
       </View>
@@ -54,11 +63,13 @@ const styles = StyleSheet.create({
   topicGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   topicTile: {
     width: '47%',
-    backgroundColor: '#EAF3E8',
-    borderRadius: 12,
+    backgroundColor: colors.primarySoft,
+    borderRadius: 16,
     paddingVertical: 20,
     alignItems: 'center',
   },
+  topicTileAlt: { backgroundColor: colors.accentSoft },
+  topicEmoji: { fontSize: 22, marginBottom: 6 },
   topicText: { fontWeight: '700', color: colors.primaryDark },
   articleTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   articleMeta: { fontSize: 12, color: colors.textMuted, marginTop: 4 },

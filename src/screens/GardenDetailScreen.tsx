@@ -24,7 +24,7 @@ export default function GardenDetailScreen({ navigation }: Props) {
       <SectionTitle>Záhony</SectionTitle>
       {beds.length === 0 ? (
         <EmptyState
-          text="Zatím tu nemáte žádný záhon."
+          text="Zatím tu nemáte žádný záhon - založte první a pojďme na to! 🌱"
           buttonTitle="Přidat záhon"
           onPress={() => navigation.navigate('AddBed')}
         />
@@ -49,7 +49,7 @@ export default function GardenDetailScreen({ navigation }: Props) {
       <SectionTitle>Stromy a keře</SectionTitle>
       {trees.length === 0 ? (
         <EmptyState
-          text="Zatím tu nemáte žádný strom ani keř."
+          text="Zatím tu nemáte žádný strom ani keř. 🌳"
           buttonTitle="Přidat strom/keř"
           onPress={() => navigation.navigate('AddTree')}
         />

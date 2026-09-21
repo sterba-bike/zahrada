@@ -10,7 +10,9 @@ export default function WelcomeScreen({ navigation }: Props) {
   return (
     <Screen scroll={false}>
       <View style={styles.center}>
-        <Text style={styles.emoji}>🌱</Text>
+        <View style={styles.emojiCircle}>
+          <Text style={styles.emoji}>🌱</Text>
+        </View>
         <Text style={styles.title}>Ekozahrádka</Text>
         <Text style={styles.subtitle}>
           Appka pro ekologické zahradničení. Evidence zahrady, kalendář prací, znalosti a
@@ -26,7 +28,16 @@ export default function WelcomeScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
-  emoji: { fontSize: 64, marginBottom: 16 },
+  emojiCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  emoji: { fontSize: 56 },
   title: { fontSize: 28, fontWeight: '800', color: colors.text, marginBottom: 12 },
   subtitle: { fontSize: 15, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
   bottom: { padding: 16 },

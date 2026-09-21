@@ -59,7 +59,11 @@ export default function RecordHarvestScreen({ navigation }: Props) {
       <TextField label="Jednotka" value={unit} onChangeText={setUnit} placeholder="kg" />
       <TextField label="Datum" value={date} onChangeText={setDate} placeholder="d.m.rrrr" />
       <PrimaryButton title="Uložit sklizeň" onPress={handleSave} disabled={saved} />
-      {saved && <Text style={{ color: colors.primary, textAlign: 'center', marginTop: 12, fontWeight: '700' }}>✓ Uloženo</Text>}
+      {saved && (
+        <Text style={{ color: '#8A5A00', textAlign: 'center', marginTop: 12, fontWeight: '700', fontSize: 15 }}>
+          🌟 Skvěle, sklizeň je zapsaná!
+        </Text>
+      )}
     </Screen>
   );
 }

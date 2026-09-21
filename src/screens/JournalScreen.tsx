@@ -19,7 +19,7 @@ export default function JournalScreen({ route, navigation }: Props) {
     <Screen>
       <Text style={styles.title}>{title}</Text>
       {entries.length === 0 ? (
-        <EmptyState text="Zatím tu není žádný záznam." />
+        <EmptyState text="Zatím tu není žádný záznam - napište první! 📝" />
       ) : (
         entries.map((e) => (
           <Card key={e.id}>

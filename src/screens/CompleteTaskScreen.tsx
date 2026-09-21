@@ -21,7 +21,7 @@ export default function CompleteTaskScreen({ navigation }: Props) {
     <Screen>
       <SectionTitle>Označit úkol hotový</SectionTitle>
       {open.length === 0 ? (
-        <EmptyState text="Všechny úkoly jsou splněné." />
+        <EmptyState text="Všechny úkoly jsou splněné - skvělá práce! 🎉" />
       ) : (
         open.map((t) => (
           <Pressable key={t.id} onPress={() => handleComplete(t.id)}>

@@ -22,6 +22,12 @@ function isSameDay(iso: string, ref: Date): boolean {
   );
 }
 
+function greetingForHour(hour: number): string {
+  if (hour < 10) return 'Dobré ráno';
+  if (hour < 18) return 'Dobré odpoledne';
+  return 'Dobrý večer';
+}
+
 export default function HomeScreen({ navigation }: Props) {
   const { garden, tasks, completeTask } = useAppData();
   const [sheetVisible, setSheetVisible] = useState(false);
@@ -34,7 +40,10 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <Screen>
-      <Text style={styles.greeting}>Dobrý den{garden ? `, ${garden.name}` : ''} 👋</Text>
+      <Text style={styles.greeting}>
+        {greetingForHour(today.getHours())}
+        {garden ? `, ${garden.name}` : ''} 👋
+      </Text>
       <Text style={styles.date}>
         {today.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })}
       </Text>
@@ -46,7 +55,7 @@ export default function HomeScreen({ navigation }: Props) {
 
       <SectionTitle>Úkoly na dnes</SectionTitle>
       {todayTasks.length === 0 ? (
-        <EmptyState text="Na dnes nemáte žádný nesplněný úkol." />
+        <EmptyState text="Na dnes nemáte žádný nesplněný úkol - užijte si volno! 🌤️" />
       ) : (
         todayTasks.map((t) => (
           <Card key={t.id}>
@@ -61,7 +70,7 @@ export default function HomeScreen({ navigation }: Props) {
       )}
 
       <SectionTitle>Eko tip dne 🌿</SectionTitle>
-      <Card>
+      <Card style={styles.tipCard}>
         <Text style={styles.tipText}>{getTipForToday()}</Text>
       </Card>
 
@@ -83,12 +92,18 @@ export default function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   greeting: { fontSize: 22, fontWeight: '800', color: colors.text },
   date: { fontSize: 14, color: colors.textMuted, marginBottom: 16, textTransform: 'capitalize' },
-  weatherCard: { backgroundColor: '#EAF3E8' },
+  weatherCard: { backgroundColor: colors.primarySoft },
   weatherLabel: { fontSize: 13, fontWeight: '700', color: colors.textMuted, marginBottom: 4 },
   weatherValue: { fontSize: 14, color: colors.text },
   taskRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   taskTitle: { fontSize: 15, fontWeight: '700', color: colors.text, flex: 1 },
-  doneButton: { backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  doneButtonText: { color: 'white', fontWeight: '700', fontSize: 12 },
+  doneButton: {
+    backgroundColor: colors.accent,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  doneButtonText: { color: colors.primaryDark, fontWeight: '800', fontSize: 12 },
+  tipCard: { backgroundColor: colors.accentSoft, borderColor: '#F3DFA8' },
   tipText: { fontSize: 14, color: colors.text, lineHeight: 20 },
 });
