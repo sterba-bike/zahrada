@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, VarietyTag, colors } from '../components/ui';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppData } from '../context/AppDataContext';
 import { formatDate, formatDateTime, taskPlacesLabel } from '../utils/format';
 import { EARLINESS_LABEL } from '../types';
@@ -11,9 +12,10 @@ type Props = NativeStackScreenProps<ZahradaStackParamList, 'TreeDetail'>;
 
 export default function TreeDetailScreen({ route, navigation }: Props) {
   const { treeId } = route.params;
-  const { beds, trees, tasks } = useAppData();
+  const { beds, trees, tasks, deleteTree } = useAppData();
   const tree = trees.find((t) => t.id === treeId);
   const treeTasks = tasks.filter((t) => t.treeIds.includes(treeId));
+  const [confirmDeleteTree, setConfirmDeleteTree] = useState(false);
 
   if (!tree) {
     return (
@@ -74,7 +76,26 @@ export default function TreeDetailScreen({ route, navigation }: Props) {
       >
         <Text style={styles.addLink}>Otevřít deník →</Text>
       </Pressable>
+
+      <Pressable onPress={() => setConfirmDeleteTree(true)} style={styles.deleteTreeButton}>
+        <Text style={styles.deleteTreeText}>🗑️ Smazat strom/keř</Text>
+      </Pressable>
       <View style={{ height: 24 }} />
+
+      <ConfirmDialog
+        visible={confirmDeleteTree}
+        title="Smazat strom/keř"
+        message={`Opravdu smazat ${tree.name}? Smažou se i jeho navazující úkoly a deníkové záznamy. Tuto akci nejde vrátit zpět.`}
+        cancelText="Zrušit"
+        confirmText="Smazat"
+        danger
+        onCancel={() => setConfirmDeleteTree(false)}
+        onConfirm={() => {
+          setConfirmDeleteTree(false);
+          deleteTree(treeId);
+          navigation.goBack();
+        }}
+      />
     </Screen>
   );
 }
@@ -88,4 +109,6 @@ const styles = StyleSheet.create({
   itemMeta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   addLink: { color: colors.primary, fontWeight: '600', marginTop: 4, marginBottom: 8 },
   mutedText: { color: colors.textMuted, marginBottom: 8 },
+  deleteTreeButton: { marginTop: 24, alignSelf: 'flex-start' },
+  deleteTreeText: { color: colors.danger, fontWeight: '700', fontSize: 15 },
 });

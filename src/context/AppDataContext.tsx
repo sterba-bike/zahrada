@@ -32,7 +32,9 @@ interface AppDataState {
 interface AppDataActions {
   createGarden: (data: Pick<Garden, 'name' | 'location'> & Partial<Garden>) => Promise<Garden>;
   addBed: (data: Omit<Bed, 'id' | 'gardenId'>) => Promise<Bed>;
+  deleteBed: (bedId: string) => Promise<void>;
   addTree: (data: Omit<Tree, 'id' | 'gardenId'>) => Promise<Tree>;
+  deleteTree: (treeId: string) => Promise<void>;
   addPlanting: (data: Omit<PlantingRecord, 'id'>) => Promise<PlantingRecord>;
   deletePlanting: (plantingId: string) => Promise<void>;
   addTask: (data: Omit<Task, 'id' | 'done'>) => Promise<Task>;
@@ -114,6 +116,40 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     [garden, profile.name]
   );
 
+  const deleteBed = useCallback(
+    async (bedId: string) => {
+      const bedPlantingIds = new Set(plantings.filter((p) => p.bedId === bedId).map((p) => p.id));
+
+      setPlantings((prev) => {
+        const next = prev.filter((p) => p.bedId !== bedId);
+        saveItem(STORAGE_KEYS.plantings, next);
+        return next;
+      });
+
+      setTasks((prev) => {
+        const next = prev
+          .filter((t) => !(t.plantingId && bedPlantingIds.has(t.plantingId)))
+          .map((t) => (t.bedIds.includes(bedId) ? { ...t, bedIds: t.bedIds.filter((id) => id !== bedId) } : t))
+          .filter((t) => t.bedIds.length > 0 || t.treeIds.length > 0);
+        saveItem(STORAGE_KEYS.tasks, next);
+        return next;
+      });
+
+      setJournal((prev) => {
+        const next = prev.filter((e) => e.bedId !== bedId);
+        saveItem(STORAGE_KEYS.journal, next);
+        return next;
+      });
+
+      setBeds((prev) => {
+        const next = prev.filter((b) => b.id !== bedId);
+        saveItem(STORAGE_KEYS.beds, next);
+        return next;
+      });
+    },
+    [plantings]
+  );
+
   const addTree = useCallback(
     async (data: Omit<Tree, 'id' | 'gardenId'>) => {
       const newTree: Tree = {
@@ -133,6 +169,28 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     [garden, profile.name]
   );
 
+  const deleteTree = useCallback(async (treeId: string) => {
+    setTasks((prev) => {
+      const next = prev
+        .map((t) => (t.treeIds.includes(treeId) ? { ...t, treeIds: t.treeIds.filter((id) => id !== treeId) } : t))
+        .filter((t) => t.bedIds.length > 0 || t.treeIds.length > 0);
+      saveItem(STORAGE_KEYS.tasks, next);
+      return next;
+    });
+
+    setJournal((prev) => {
+      const next = prev.filter((e) => e.treeId !== treeId);
+      saveItem(STORAGE_KEYS.journal, next);
+      return next;
+    });
+
+    setTrees((prev) => {
+      const next = prev.filter((t) => t.id !== treeId);
+      saveItem(STORAGE_KEYS.trees, next);
+      return next;
+    });
+  }, []);
+
   const addPlanting = useCallback(async (data: Omit<PlantingRecord, 'id'>) => {
     const newPlanting: PlantingRecord = { ...data, id: generateId() };
     setPlantings((prev) => {
@@ -143,10 +201,16 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return newPlanting;
   }, []);
 
+  // Smaže rostlinu i úkoly, které pro ni appka sama navrhla (viz plantingId v AddPlantScreen).
   const deletePlanting = useCallback(async (plantingId: string) => {
     setPlantings((prev) => {
       const next = prev.filter((p) => p.id !== plantingId);
       saveItem(STORAGE_KEYS.plantings, next);
+      return next;
+    });
+    setTasks((prev) => {
+      const next = prev.filter((t) => t.plantingId !== plantingId);
+      saveItem(STORAGE_KEYS.tasks, next);
       return next;
     });
   }, []);
@@ -230,7 +294,9 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       profile,
       createGarden,
       addBed,
+      deleteBed,
       addTree,
+      deleteTree,
       addPlanting,
       deletePlanting,
       addTask,
@@ -252,7 +318,9 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       profile,
       createGarden,
       addBed,
+      deleteBed,
       addTree,
+      deleteTree,
       addPlanting,
       deletePlanting,
       addTask,

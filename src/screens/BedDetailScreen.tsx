@@ -13,11 +13,12 @@ type Props = NativeStackScreenProps<ZahradaStackParamList, 'BedDetail'>;
 
 export default function BedDetailScreen({ route, navigation }: Props) {
   const { bedId } = route.params;
-  const { beds, trees, tasks, bedHistory, deletePlanting } = useAppData();
+  const { beds, trees, tasks, bedHistory, deletePlanting, deleteBed } = useAppData();
   const bed = beds.find((b) => b.id === bedId);
   const plantings = bedHistory(bedId).sort((a, b) => b.year - a.year);
   const bedTasks = tasks.filter((t) => t.bedIds.includes(bedId));
   const [toDelete, setToDelete] = useState<PlantingRecord | null>(null);
+  const [confirmDeleteBed, setConfirmDeleteBed] = useState(false);
 
   if (!bed) {
     return (
@@ -102,6 +103,10 @@ export default function BedDetailScreen({ route, navigation }: Props) {
       >
         <Text style={styles.addLink}>Otevřít deník →</Text>
       </Pressable>
+
+      <Pressable onPress={() => setConfirmDeleteBed(true)} style={styles.deleteBedButton}>
+        <Text style={styles.deleteBedText}>🗑️ Smazat záhon</Text>
+      </Pressable>
       <View style={{ height: 24 }} />
 
       <ConfirmDialog
@@ -119,6 +124,21 @@ export default function BedDetailScreen({ route, navigation }: Props) {
           setToDelete(null);
         }}
       />
+
+      <ConfirmDialog
+        visible={confirmDeleteBed}
+        title="Smazat záhon"
+        message={`Opravdu smazat záhon ${bed.name}? Smažou se i všechny rostliny v něm, jejich navazující úkoly a deníkové záznamy. Tuto akci nejde vrátit zpět.`}
+        cancelText="Zrušit"
+        confirmText="Smazat"
+        danger
+        onCancel={() => setConfirmDeleteBed(false)}
+        onConfirm={() => {
+          setConfirmDeleteBed(false);
+          deleteBed(bedId);
+          navigation.goBack();
+        }}
+      />
     </Screen>
   );
 }
@@ -134,4 +154,6 @@ const styles = StyleSheet.create({
   itemMeta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   addLink: { color: colors.primary, fontWeight: '600', marginTop: 4, marginBottom: 8 },
   mutedText: { color: colors.textMuted, marginBottom: 8 },
+  deleteBedButton: { marginTop: 24, alignSelf: 'flex-start' },
+  deleteBedText: { color: colors.danger, fontWeight: '700', fontSize: 15 },
 });
