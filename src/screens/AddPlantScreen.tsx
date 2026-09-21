@@ -28,6 +28,14 @@ const VARIETY_PLACEHOLDER: Record<string, string> = {
 
 const EARLINESS_OPTIONS: EarlinessGroup[] = ['rana', 'polorana', 'pozdni'];
 
+// Porovnává bez ohledu na velikost písmen a diakritiku (např. "cesnek" najde "Česnek").
+function normalizeSearch(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+}
+
 interface PendingPlanting {
   species: PlantSpecies;
   plantedDate: Date;
@@ -38,6 +46,7 @@ interface PendingPlanting {
 export default function AddPlantScreen({ route, navigation }: Props) {
   const { bedId } = route.params;
   const { garden, bedHistory, addPlanting, addTask } = useAppData();
+  const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<PlantSpecies | null>(null);
   const [plantedDate, setPlantedDate] = useState(new Date());
   const [variety, setVariety] = useState('');
@@ -45,13 +54,19 @@ export default function AddPlantScreen({ route, navigation }: Props) {
   const [warning, setWarning] = useState<{ pending: PendingPlanting; message: string } | null>(null);
   const [autoTasksNotice, setAutoTasksNotice] = useState<string | null>(null);
 
+  const filteredSpecies = useMemo(() => {
+    const query = normalizeSearch(search.trim());
+    if (!query) return SEED_PLANT_SPECIES;
+    return SEED_PLANT_SPECIES.filter((sp) => normalizeSearch(sp.name).includes(query));
+  }, [search]);
+
   const speciesByCategory = useMemo(
     () =>
       CATEGORY_ORDER.map((category) => ({
         category,
-        species: SEED_PLANT_SPECIES.filter((sp) => sp.category === category),
+        species: filteredSpecies.filter((sp) => sp.category === category),
       })).filter((group) => group.species.length > 0),
-    []
+    [filteredSpecies]
   );
 
   const history = bedHistory(bedId);
@@ -121,6 +136,15 @@ export default function AddPlantScreen({ route, navigation }: Props) {
   return (
     <Screen>
       <SectionTitle>Vybrat rostlinu</SectionTitle>
+      <TextField
+        label="Hledat druh"
+        value={search}
+        onChangeText={setSearch}
+        placeholder="např. rajče"
+      />
+      {speciesByCategory.length === 0 && (
+        <Text style={styles.noResults}>Žádný druh podle „{search}" nenalezen.</Text>
+      )}
       {speciesByCategory.map(({ category, species }) => (
         <View key={category} style={{ marginBottom: 12 }}>
           <Text style={styles.categoryLabel}>{SPECIES_CATEGORY_LABEL[category]}</Text>
@@ -211,6 +235,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 8,
   },
+  noResults: { color: colors.textMuted, fontSize: 14, marginBottom: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 14,
