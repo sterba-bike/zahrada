@@ -12,6 +12,8 @@ import AddPlantScreen from '../screens/AddPlantScreen';
 import EditPlantScreen from '../screens/EditPlantScreen';
 import JournalScreen from '../screens/JournalScreen';
 import HarvestOverviewScreen from '../screens/HarvestOverviewScreen';
+import MyGardensScreen from '../screens/MyGardensScreen';
+import AddGardenScreen from '../screens/AddGardenScreen';
 
 const Stack = createNativeStackNavigator<ZahradaStackParamList>();
 
@@ -36,6 +38,8 @@ export default function ZahradaStack() {
         component={HarvestOverviewScreen}
         options={{ title: 'Přehled sklizně' }}
       />
+      <Stack.Screen name="MyGardens" component={MyGardensScreen} options={{ title: 'Moje zahrady' }} />
+      <Stack.Screen name="AddGarden" component={AddGardenScreen} options={{ title: 'Nová zahrada' }} />
     </Stack.Navigator>
   );
 }

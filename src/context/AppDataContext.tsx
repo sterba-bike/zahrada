@@ -19,6 +19,8 @@ const DEFAULT_PROFILE: Profile = {
 
 interface AppDataState {
   loading: boolean;
+  gardens: Garden[];
+  activeGardenId: string | null;
   garden: Garden | null;
   beds: Bed[];
   trees: Tree[];
@@ -31,6 +33,7 @@ interface AppDataState {
 
 interface AppDataActions {
   createGarden: (data: Pick<Garden, 'name' | 'location'> & Partial<Garden>) => Promise<Garden>;
+  switchGarden: (gardenId: string) => Promise<void>;
   addBed: (data: Omit<Bed, 'id' | 'gardenId'>) => Promise<Bed>;
   deleteBed: (bedId: string) => Promise<void>;
   addTree: (data: Omit<Tree, 'id' | 'gardenId'>) => Promise<Tree>;
@@ -53,7 +56,9 @@ const AppDataContext = createContext<(AppDataState & AppDataActions) | null>(nul
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
-  const [garden, setGarden] = useState<Garden | null>(null);
+  const [gardens, setGardens] = useState<Garden[]>([]);
+  const [activeGardenId, setActiveGardenId] = useState<string | null>(null);
+  const garden = gardens.find((g) => g.id === activeGardenId) ?? null;
   const [beds, setBeds] = useState<Bed[]>([]);
   const [trees, setTrees] = useState<Tree[]>([]);
   const [plantings, setPlantings] = useState<PlantingRecord[]>([]);
@@ -64,8 +69,9 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const [g, b, t, p, tk, j, h, pr] = await Promise.all([
-        loadItem<Garden | null>(STORAGE_KEYS.garden, null),
+      let [loadedGardens, loadedActiveId, b, t, p, tk, j, h, pr] = await Promise.all([
+        loadItem<Garden[]>(STORAGE_KEYS.gardens, []),
+        loadItem<string | null>(STORAGE_KEYS.activeGardenId, null),
         loadItem<Bed[]>(STORAGE_KEYS.beds, []),
         loadItem<Tree[]>(STORAGE_KEYS.trees, []),
         loadItem<PlantingRecord[]>(STORAGE_KEYS.plantings, []),
@@ -74,7 +80,23 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         loadItem<Harvest[]>(STORAGE_KEYS.harvests, []),
         loadItem<Profile>(STORAGE_KEYS.profile, DEFAULT_PROFILE),
       ]);
-      setGarden(g);
+
+      // Migrace z V1 (appka pracovala jen s jednou zahradou pod jiným klíčem).
+      if (loadedGardens.length === 0) {
+        const legacyGarden = await loadItem<Garden | null>(STORAGE_KEYS.garden, null);
+        if (legacyGarden) {
+          loadedGardens = [legacyGarden];
+          loadedActiveId = legacyGarden.id;
+          await saveItem(STORAGE_KEYS.gardens, loadedGardens);
+          await saveItem(STORAGE_KEYS.activeGardenId, loadedActiveId);
+        }
+      }
+      if (!loadedActiveId && loadedGardens.length > 0) {
+        loadedActiveId = loadedGardens[0].id;
+      }
+
+      setGardens(loadedGardens);
+      setActiveGardenId(loadedActiveId);
       setBeds(b);
       setTrees(t);
       setPlantings(p);
@@ -86,6 +108,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
+  // Zakládá novou zahradu (při úvodním nastavení i při přidání další) a rovnou ji přepne jako aktivní.
   const createGarden = useCallback(async (data: Pick<Garden, 'name' | 'location'> & Partial<Garden>) => {
     const newGarden: Garden = {
       id: generateId(),
@@ -96,9 +119,19 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       slope: data.slope,
       createdAt: new Date().toISOString(),
     };
-    setGarden(newGarden);
-    await saveItem(STORAGE_KEYS.garden, newGarden);
+    setGardens((prev) => {
+      const next = [...prev, newGarden];
+      saveItem(STORAGE_KEYS.gardens, next);
+      return next;
+    });
+    setActiveGardenId(newGarden.id);
+    await saveItem(STORAGE_KEYS.activeGardenId, newGarden.id);
     return newGarden;
+  }, []);
+
+  const switchGarden = useCallback(async (gardenId: string) => {
+    setActiveGardenId(gardenId);
+    await saveItem(STORAGE_KEYS.activeGardenId, gardenId);
   }, []);
 
   const addBed = useCallback(
@@ -315,18 +348,31 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     [plantings]
   );
 
+  // Appka drží data všech zahrad pohromadě (jedno AsyncStorage pole), ale ven
+  // vystavuje vždy jen to, co patří k právě aktivní zahradě.
+  const gardenBeds = useMemo(() => beds.filter((b) => b.gardenId === activeGardenId), [beds, activeGardenId]);
+  const gardenTrees = useMemo(() => trees.filter((t) => t.gardenId === activeGardenId), [trees, activeGardenId]);
+  const gardenTasks = useMemo(() => tasks.filter((t) => t.gardenId === activeGardenId), [tasks, activeGardenId]);
+  const gardenHarvests = useMemo(
+    () => harvests.filter((h) => h.gardenId === activeGardenId),
+    [harvests, activeGardenId]
+  );
+
   const value = useMemo(
     () => ({
       loading,
+      gardens,
+      activeGardenId,
       garden,
-      beds,
-      trees,
+      beds: gardenBeds,
+      trees: gardenTrees,
       plantings,
-      tasks,
+      tasks: gardenTasks,
       journal,
-      harvests,
+      harvests: gardenHarvests,
       profile,
       createGarden,
+      switchGarden,
       addBed,
       deleteBed,
       addTree,
@@ -343,15 +389,18 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       loading,
+      gardens,
+      activeGardenId,
       garden,
-      beds,
-      trees,
+      gardenBeds,
+      gardenTrees,
       plantings,
-      tasks,
+      gardenTasks,
       journal,
-      harvests,
+      gardenHarvests,
       profile,
       createGarden,
+      switchGarden,
       addBed,
       deleteBed,
       addTree,

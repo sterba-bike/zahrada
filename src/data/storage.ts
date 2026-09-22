@@ -3,7 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Jednotné klíče pro lokální (offline) úložiště appky.
 // Appka V1 běží čistě offline nad AsyncStorage - žádný server, žádná synchronizace.
 export const STORAGE_KEYS = {
-  garden: '@ekozahradka/garden',
+  garden: '@ekozahradka/garden', // legacy V1 klíč (jedna zahrada) - viz migrace v AppDataContext
+  gardens: '@ekozahradka/gardens',
+  activeGardenId: '@ekozahradka/activeGardenId',
   beds: '@ekozahradka/beds',
   trees: '@ekozahradka/trees',
   plantings: '@ekozahradka/plantings',

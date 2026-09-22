@@ -15,11 +15,16 @@ type Props = CompositeScreenProps<
 >;
 
 export default function GardenDetailScreen({ navigation }: Props) {
-  const { garden, beds, trees } = useAppData();
+  const { garden, gardens, beds, trees } = useAppData();
 
   return (
     <Screen>
-      <Text style={styles.gardenName}>{garden?.name}</Text>
+      <Pressable onPress={() => navigation.navigate('MyGardens')}>
+        <View style={styles.nameRow}>
+          <Text style={styles.gardenName}>{garden?.name}</Text>
+          {gardens.length > 1 && <Text style={styles.switchIcon}>🔀</Text>}
+        </View>
+      </Pressable>
       <Text style={styles.gardenLocation}>{garden?.location}</Text>
       <View style={styles.linkRow}>
         <Pressable onPress={() => navigation.navigate('HarvestOverview')}>
@@ -89,6 +94,7 @@ export default function GardenDetailScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   gardenName: { fontSize: 24, fontWeight: '800', color: colors.text },
+  switchIcon: { fontSize: 16 },
   gardenLocation: { fontSize: 14, color: colors.textMuted, marginBottom: 8 },
   linkRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 8 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
