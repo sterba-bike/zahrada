@@ -19,12 +19,12 @@ export default function GardenDetailScreen({ navigation }: Props) {
 
   return (
     <Screen>
-      <Pressable onPress={() => navigation.navigate('MyGardens')}>
-        <View style={styles.nameRow}>
-          <Text style={styles.gardenName}>{garden?.name}</Text>
-          {gardens.length > 1 && <Text style={styles.switchIcon}>🔀</Text>}
-        </View>
-      </Pressable>
+      <View style={styles.headerRow}>
+        <Text style={styles.gardenName}>{garden?.name}</Text>
+        <Pressable onPress={() => navigation.navigate('MyGardens')} style={styles.switchButton}>
+          <Text style={styles.switchButtonText}>🔀 Zahrady{gardens.length > 1 ? ` (${gardens.length})` : ''}</Text>
+        </Pressable>
+      </View>
       <Text style={styles.gardenLocation}>{garden?.location}</Text>
       <View style={styles.linkRow}>
         <Pressable onPress={() => navigation.navigate('HarvestOverview')}>
@@ -93,8 +93,17 @@ export default function GardenDetailScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  gardenName: { fontSize: 24, fontWeight: '800', color: colors.text },
-  switchIcon: { fontSize: 16 },
+  gardenName: { fontSize: 24, fontWeight: '800', color: colors.text, flexShrink: 1 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  switchButton: {
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  switchButtonText: { color: colors.primaryDark, fontWeight: '700', fontSize: 13 },
   gardenLocation: { fontSize: 14, color: colors.textMuted, marginBottom: 8 },
   linkRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 8 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
