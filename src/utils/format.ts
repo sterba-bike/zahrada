@@ -28,6 +28,16 @@ export function taskPlacesLabel(task: Task, beds: Bed[], trees: Tree[]): string 
   return parts.join(', ');
 }
 
+// Datum sklizně bývalo dřív ukládané jako volný text "d.m.rrrr", proto tolerantní
+// rozpoznání roku i pro starší záznamy - nová appka ukládá přímo ISO datum.
+export function harvestYear(dateStr: string): number {
+  const iso = new Date(dateStr);
+  if (!Number.isNaN(iso.getTime())) return iso.getFullYear();
+  const match = dateStr.match(/^\d{1,2}\.\d{1,2}\.(\d{4})$/);
+  if (match) return Number(match[1]);
+  return new Date().getFullYear();
+}
+
 export function formatDateTime(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;

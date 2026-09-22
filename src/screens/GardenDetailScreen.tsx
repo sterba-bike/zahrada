@@ -15,6 +15,9 @@ export default function GardenDetailScreen({ navigation }: Props) {
     <Screen>
       <Text style={styles.gardenName}>{garden?.name}</Text>
       <Text style={styles.gardenLocation}>{garden?.location}</Text>
+      <Pressable onPress={() => navigation.navigate('HarvestOverview')}>
+        <Text style={styles.addLink}>🧺 Přehled sklizně →</Text>
+      </Pressable>
 
       <SectionTitle>Záhony</SectionTitle>
       {beds.length === 0 ? (

@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, TextField, PrimaryButton, SectionTitle, colors } from '../components/ui';
+import { DateField } from '../components/DatePicker';
 import { useAppData } from '../context/AppDataContext';
 import { useSingleSubmit } from '../utils/useSingleSubmit';
 
@@ -13,7 +14,7 @@ export default function RecordHarvestScreen({ navigation }: Props) {
   const [cropName, setCropName] = useState('');
   const [amount, setAmount] = useState('');
   const [unit, setUnit] = useState('kg');
-  const [date, setDate] = useState(new Date().toLocaleDateString('cs-CZ'));
+  const [date, setDate] = useState(new Date());
   const [submitted, setSubmitted] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -28,7 +29,7 @@ export default function RecordHarvestScreen({ navigation }: Props) {
       cropName: cropName.trim(),
       amount: amountNum,
       unit: unit.trim() || 'kg',
-      date,
+      date: date.toISOString(),
     });
     setSaved(true);
     setTimeout(() => navigation.goBack(), 700);
@@ -57,7 +58,7 @@ export default function RecordHarvestScreen({ navigation }: Props) {
         </Text>
       )}
       <TextField label="Jednotka" value={unit} onChangeText={setUnit} placeholder="kg" />
-      <TextField label="Datum" value={date} onChangeText={setDate} placeholder="d.m.rrrr" />
+      <DateField label="Datum" required value={date} onChange={setDate} />
       <PrimaryButton title="Uložit sklizeň" onPress={handleSave} disabled={saved} />
       {saved && (
         <Text style={{ color: '#8A5A00', textAlign: 'center', marginTop: 12, fontWeight: '700', fontSize: 15 }}>

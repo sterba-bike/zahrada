@@ -28,6 +28,7 @@ export type ZahradaStackParamList = {
   AddPlant: { bedId: string };
   EditPlant: { plantingId: string };
   Journal: { bedId?: string; treeId?: string; title: string };
+  HarvestOverview: undefined;
 };
 
 // Vlastní stack v záložce Eko - ze stejného důvodu jako u Zahrady.
