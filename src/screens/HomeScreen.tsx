@@ -6,7 +6,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, MainTabParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, EmptyState, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
-import { getTipForToday } from '../data/ecoTips';
+import { pickEcoTip } from '../rules/ecoTipRules';
 import { taskPlacesLabel } from '../utils/format';
 import Fab from '../components/Fab';
 import QuickActionSheet from '../components/QuickActionSheet';
@@ -30,13 +30,18 @@ function greetingForHour(hour: number): string {
 }
 
 export default function HomeScreen({ navigation }: Props) {
-  const { garden, tasks, beds, trees, completeTask } = useAppData();
+  const { garden, plantings, tasks, beds, trees, profile, completeTask } = useAppData();
   const [sheetVisible, setSheetVisible] = useState(false);
 
   const today = new Date();
   const todayTasks = useMemo(
     () => tasks.filter((t) => !t.done && isSameDay(t.dueDate, today)),
     [tasks]
+  );
+
+  const ecoTip = useMemo(
+    () => pickEcoTip({ today, garden, profile, plantings }),
+    [garden, profile, plantings]
   );
 
   return (
@@ -77,7 +82,7 @@ export default function HomeScreen({ navigation }: Props) {
 
       <SectionTitle>Eko tip dne 🌿</SectionTitle>
       <Card style={styles.tipCard}>
-        <Text style={styles.tipText}>{getTipForToday()}</Text>
+        <Text style={styles.tipText}>{ecoTip.text}</Text>
       </Card>
 
       <View style={{ height: 80 }} />

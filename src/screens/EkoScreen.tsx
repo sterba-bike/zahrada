@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EkoStackParamList } from '../navigation/types';
@@ -12,28 +12,54 @@ const TOPICS: { label: string; emoji: string }[] = [
   { label: 'Mulčování', emoji: '🌾' },
   { label: 'Přírodní ochrana', emoji: '🐞' },
   { label: 'Biodiverzita', emoji: '🦋' },
+  { label: 'Hospodaření s vodou', emoji: '💧' },
+  { label: 'Osevní postup', emoji: '🔄' },
+  { label: 'Přírodní hnojiva', emoji: '🌿' },
+  { label: 'Ochrana před mrazem', emoji: '❄️' },
+  { label: 'Založení záhonu', emoji: '🧑‍🌾' },
 ];
 
 export default function EkoScreen({ navigation }: Props) {
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const filteredArticles = useMemo(
+    () => (selectedTopic ? ARTICLES.filter((a) => a.category === selectedTopic) : ARTICLES),
+    [selectedTopic]
+  );
+
   return (
     <Screen>
       <Text style={styles.pageTitle}>Eko - znalostní centrum</Text>
 
       <SectionTitle>Témata</SectionTitle>
       <View style={styles.topicGrid}>
-        {TOPICS.map((topic, i) => (
-          <View
-            key={topic.label}
-            style={[styles.topicTile, i % 2 === 1 && styles.topicTileAlt]}
-          >
-            <Text style={styles.topicEmoji}>{topic.emoji}</Text>
-            <Text style={styles.topicText}>{topic.label}</Text>
-          </View>
-        ))}
+        {TOPICS.map((topic, i) => {
+          const active = selectedTopic === topic.label;
+          return (
+            <Pressable
+              key={topic.label}
+              onPress={() => setSelectedTopic(active ? null : topic.label)}
+              style={[
+                styles.topicTile,
+                i % 2 === 1 && styles.topicTileAlt,
+                active && styles.topicTileActive,
+              ]}
+            >
+              <Text style={styles.topicEmoji}>{topic.emoji}</Text>
+              <Text style={[styles.topicText, active && styles.topicTextActive]}>{topic.label}</Text>
+            </Pressable>
+          );
+        })}
       </View>
 
-      <SectionTitle>Doporučené články</SectionTitle>
-      {ARTICLES.map((a) => (
+      <SectionTitle>
+        {selectedTopic ? `Články: ${selectedTopic}` : 'Doporučené články'}
+      </SectionTitle>
+      {selectedTopic && (
+        <Pressable onPress={() => setSelectedTopic(null)}>
+          <Text style={styles.resetLink}>← Zobrazit všechna témata</Text>
+        </Pressable>
+      )}
+      {filteredArticles.map((a) => (
         <Pressable key={a.id} onPress={() => navigation.navigate('ArticleDetail', { articleId: a.id })}>
           <Card>
             <Text style={styles.articleTitle}>{a.title}</Text>
@@ -64,8 +90,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   topicTileAlt: { backgroundColor: colors.accentSoft },
+  topicTileActive: { backgroundColor: colors.primary },
   topicEmoji: { fontSize: 22, marginBottom: 6 },
   topicText: { fontWeight: '700', color: colors.primaryDark },
+  topicTextActive: { color: 'white' },
+  resetLink: { color: colors.primary, fontWeight: '600', marginBottom: 8 },
   articleTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   articleMeta: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
 });

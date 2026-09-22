@@ -1,6 +1,5 @@
-// Zjednodušená V1 verze eko-tipů (sekce 5.3 specifikace).
-// Plnohodnotný pravidlový engine s prioritami je až pro V2 - tady stačí pár
-// ručně napsaných sezónních tipů podle měsíce, jak spec pro V1 doporučuje.
+// Sezónní tipy podle měsíce - nejnižší priorita v pravidlovém enginu
+// pro eko-tipy (viz src/rules/ecoTipRules.ts, sekce 5.3 specifikace).
 export const SEASONAL_ECO_TIPS: string[] = [
   'Leden: zkontrolujte uskladněnou úrodu a vyřaďte plody se známkami hniloby.',
   'Únor: naplánujte osevní postup - nesázejte stejnou plodinu na stejné místo jako loni.',
@@ -15,8 +14,3 @@ export const SEASONAL_ECO_TIPS: string[] = [
   'Listopad: zkontrolujte úkryty pro užitečné živočichy (ježky, slepýše) na zimu.',
   'Prosinec: naplánujte na příští sezónu střídání skupin náročnosti podle historie záhonů.',
 ];
-
-export function getTipForToday(): string {
-  const month = new Date().getMonth();
-  return SEASONAL_ECO_TIPS[month];
-}
