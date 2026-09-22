@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ZahradaStackParamList } from '../navigation/types';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import { RootStackParamList, ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, EmptyState, VarietyTag, colors } from '../components/ui';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppData } from '../context/AppDataContext';
@@ -9,7 +10,12 @@ import { getSpeciesById } from '../data/seedPlants';
 import { BED_TYPE_LABEL, DIFFICULTY_LABEL, formatDate, formatDateTime, taskPlacesLabel } from '../utils/format';
 import { EARLINESS_LABEL, PlantingRecord } from '../types';
 
-type Props = NativeStackScreenProps<ZahradaStackParamList, 'BedDetail'>;
+// Zaznamenat sklizeň (RecordHarvest) je globální obrazovka na kořenovém stacku,
+// proto kombinovaný typ navigace stejně jako u Deníku.
+type Props = CompositeScreenProps<
+  NativeStackScreenProps<ZahradaStackParamList, 'BedDetail'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
 
 export default function BedDetailScreen({ route, navigation }: Props) {
   const { bedId } = route.params;
@@ -107,6 +113,9 @@ export default function BedDetailScreen({ route, navigation }: Props) {
         onPress={() => navigation.navigate('Journal', { bedId, title: `Deník: ${bed.name}` })}
       >
         <Text style={styles.addLink}>Otevřít deník →</Text>
+      </Pressable>
+      <Pressable onPress={() => navigation.navigate('RecordHarvest', { bedId })}>
+        <Text style={styles.addLink}>🧺 Zaznamenat sklizeň</Text>
       </Pressable>
 
       <Pressable onPress={() => setConfirmDeleteBed(true)} style={styles.deleteBedButton}>

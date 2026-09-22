@@ -145,6 +145,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
 
+      // Sklizeň se nemaže (počítá se do Přehledu sklizně za celou zahradu),
+      // jen se odpojí vazba na smazaný záhon.
+      setHarvests((prev) => {
+        const next = prev.map((h) => (h.bedId === bedId ? { ...h, bedId: undefined } : h));
+        saveItem(STORAGE_KEYS.harvests, next);
+        return next;
+      });
+
       setBeds((prev) => {
         const next = prev.filter((b) => b.id !== bedId);
         saveItem(STORAGE_KEYS.beds, next);
@@ -185,6 +193,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     setJournal((prev) => {
       const next = prev.filter((e) => e.treeId !== treeId);
       saveItem(STORAGE_KEYS.journal, next);
+      return next;
+    });
+
+    // Sklizeň se nemaže (počítá se do Přehledu sklizně za celou zahradu),
+    // jen se odpojí vazba na smazaný strom/keř.
+    setHarvests((prev) => {
+      const next = prev.map((h) => (h.treeId === treeId ? { ...h, treeId: undefined } : h));
+      saveItem(STORAGE_KEYS.harvests, next);
       return next;
     });
 

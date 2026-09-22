@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ZahradaStackParamList } from '../navigation/types';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import { RootStackParamList, ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, VarietyTag, colors } from '../components/ui';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppData } from '../context/AppDataContext';
 import { formatDate, formatDateTime, taskPlacesLabel } from '../utils/format';
 import { EARLINESS_LABEL } from '../types';
 
-type Props = NativeStackScreenProps<ZahradaStackParamList, 'TreeDetail'>;
+// Zaznamenat sklizeň (RecordHarvest) je globální obrazovka na kořenovém stacku,
+// proto kombinovaný typ navigace stejně jako u Deníku.
+type Props = CompositeScreenProps<
+  NativeStackScreenProps<ZahradaStackParamList, 'TreeDetail'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
 
 export default function TreeDetailScreen({ route, navigation }: Props) {
   const { treeId } = route.params;
@@ -75,6 +81,9 @@ export default function TreeDetailScreen({ route, navigation }: Props) {
         onPress={() => navigation.navigate('Journal', { treeId, title: `Deník: ${tree.name}` })}
       >
         <Text style={styles.addLink}>Otevřít deník →</Text>
+      </Pressable>
+      <Pressable onPress={() => navigation.navigate('RecordHarvest', { treeId })}>
+        <Text style={styles.addLink}>🧺 Zaznamenat sklizeň</Text>
       </Pressable>
 
       <Pressable onPress={() => setConfirmDeleteTree(true)} style={styles.deleteTreeButton}>

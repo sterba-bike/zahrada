@@ -1,12 +1,18 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ZahradaStackParamList } from '../navigation/types';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import { RootStackParamList, ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, EmptyState, VarietyTag, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { BED_TYPE_LABEL, formatDate } from '../utils/format';
 
-type Props = NativeStackScreenProps<ZahradaStackParamList, 'GardenDetail'>;
+// Zaznamenat sklizeň (RecordHarvest) je globální obrazovka na kořenovém stacku,
+// proto kombinovaný typ navigace stejně jako u Deníku.
+type Props = CompositeScreenProps<
+  NativeStackScreenProps<ZahradaStackParamList, 'GardenDetail'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
 
 export default function GardenDetailScreen({ navigation }: Props) {
   const { garden, beds, trees } = useAppData();
@@ -15,9 +21,14 @@ export default function GardenDetailScreen({ navigation }: Props) {
     <Screen>
       <Text style={styles.gardenName}>{garden?.name}</Text>
       <Text style={styles.gardenLocation}>{garden?.location}</Text>
-      <Pressable onPress={() => navigation.navigate('HarvestOverview')}>
-        <Text style={styles.addLink}>🧺 Přehled sklizně →</Text>
-      </Pressable>
+      <View style={styles.linkRow}>
+        <Pressable onPress={() => navigation.navigate('HarvestOverview')}>
+          <Text style={styles.addLink}>🧺 Přehled sklizně →</Text>
+        </Pressable>
+        <Pressable onPress={() => navigation.navigate('RecordHarvest')}>
+          <Text style={styles.addLink}>+ Zaznamenat sklizeň</Text>
+        </Pressable>
+      </View>
 
       <SectionTitle>Záhony</SectionTitle>
       {beds.length === 0 ? (
@@ -79,6 +90,7 @@ export default function GardenDetailScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   gardenName: { fontSize: 24, fontWeight: '800', color: colors.text },
   gardenLocation: { fontSize: 14, color: colors.textMuted, marginBottom: 8 },
+  linkRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 8 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   itemName: { fontSize: 16, fontWeight: '700', color: colors.text },
   itemMeta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },

@@ -3,7 +3,7 @@ export type RootStackParamList = {
   CreateGarden: undefined;
   AddFirstBed: { gardenId: string };
   Main: undefined;
-  RecordHarvest: undefined;
+  RecordHarvest: { bedId?: string; treeId?: string } | undefined;
   AddTask: undefined;
   AddJournalEntry: { bedId?: string; treeId?: string; photoOnly?: boolean };
   CompleteTask: undefined;
