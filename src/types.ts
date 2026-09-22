@@ -13,10 +13,20 @@ export interface Garden {
   id: string;
   name: string;
   location: string;
+  lat?: number; // dopočteno appkou z lokality (geokódování) - jen pro dotaz na počasí
+  lon?: number;
   elevation?: string;
   orientation?: string;
   slope?: string;
   createdAt: string;
+}
+
+export interface WeatherDay {
+  date: string; // ISO datum (yyyy-mm-dd)
+  weatherCode: number; // WMO kód počasí (Open-Meteo)
+  tempMin: number;
+  tempMax: number;
+  precipitationMm: number;
 }
 
 export type BedType = 'zeleninovy' | 'bylinkovy' | 'kvetinovy' | 'jiny';

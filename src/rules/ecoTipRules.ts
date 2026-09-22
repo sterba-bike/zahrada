@@ -1,15 +1,9 @@
-import { Garden, PlantingRecord, Profile } from '../types';
+import { Garden, PlantingRecord, Profile, WeatherDay } from '../types';
 import { getSpeciesById } from '../data/seedPlants';
 import { SEASONAL_ECO_TIPS } from '../data/ecoTips';
 
 // Pravidlový systém pro eko-tip na Nástěnce (sekce 5.3 specifikace).
 // Appka vybere tip s nejvyšší prioritou, jehož podmínka aktuálně platí.
-//
-// Priority 10 (Mráz) a 8 (Sucho) ze vzorové sady ve specifikaci vyžadují
-// skutečná data o počasí, která appka zatím nemá (viz V2 - Skutečné počasí,
-// zatím odloženo). Prioritní sloty 10 a 8 jsou proto záměrně volné - až appka
-// bude mít reálné počasí, přidá se sem odpovídající pravidlo bez zásahu
-// do zbytku enginu.
 
 export interface EcoTipResult {
   ruleId: string;
@@ -22,6 +16,17 @@ interface EcoTipContext {
   garden: Garden | null;
   profile: Profile;
   plantings: PlantingRecord[];
+  // Počasí je volitelné - appka umí ukázat eko-tip i bez něj (offline,
+  // nebo dokud se předpověď nestáhla), jen tím přijde o pravidla Mráz/Sucho.
+  weatherDays?: WeatherDay[] | null;
+}
+
+function findDay(days: WeatherDay[] | null | undefined, offsetDays: number): WeatherDay | undefined {
+  if (!days) return undefined;
+  const target = new Date();
+  target.setDate(target.getDate() + offsetDays);
+  const targetIso = target.toISOString().slice(0, 10);
+  return days.find((d) => d.date === targetIso);
 }
 
 interface EcoTipRule {
@@ -35,6 +40,32 @@ function dayOfYear(d: Date): number {
   const diffMs = d.getTime() - start.getTime();
   return Math.floor(diffMs / 86400000);
 }
+
+// Priorita 10 - Mráz: predikce mrazu na zítra.
+const frostRule: EcoTipRule = {
+  id: 'frost-tomorrow',
+  priority: 10,
+  evaluate: (ctx) => {
+    const tomorrow = findDay(ctx.weatherDays, 1);
+    if (!tomorrow || tomorrow.tempMin > 0) return null;
+    return `Na zítřek se čeká mráz (min. ${Math.round(tomorrow.tempMin)} °C) - přikryjte citlivé sazenice netkanou textilií nebo je přeneste dovnitř.`;
+  },
+};
+
+// Priorita 8 - Sucho: méně než 5 mm srážek za posledních 7 dní.
+const droughtRule: EcoTipRule = {
+  id: 'drought-last-week',
+  priority: 8,
+  evaluate: (ctx) => {
+    if (!ctx.weatherDays) return null;
+    const todayIso = ctx.today.toISOString().slice(0, 10);
+    const last7 = ctx.weatherDays.filter((d) => d.date < todayIso).slice(-7);
+    if (last7.length < 7) return null;
+    const totalRain = last7.reduce((sum, d) => sum + d.precipitationMm, 0);
+    if (totalRain >= 5) return null;
+    return `Poslední týden skoro nepršelo (jen ${totalRain.toFixed(1)} mm). Zalévejte časně ráno nebo večer, mulč pomůže zadržet vodu v půdě.`;
+  },
+};
 
 // Priorita 5 - Historie záhonu: pokud v některém záhonu loni rostla plodina
 // z náročné skupiny, doporučí letos luskoviny (obohacují půdu dusíkem).
@@ -97,7 +128,14 @@ const seasonalFallbackRule: EcoTipRule = {
   evaluate: (ctx) => SEASONAL_ECO_TIPS[ctx.today.getMonth()],
 };
 
-const RULES: EcoTipRule[] = [bedHistoryRule, currentPlantMistakeRule, altitudeRule, seasonalFallbackRule];
+const RULES: EcoTipRule[] = [
+  frostRule,
+  droughtRule,
+  bedHistoryRule,
+  currentPlantMistakeRule,
+  altitudeRule,
+  seasonalFallbackRule,
+];
 
 // Priorita 2 - Úroveň zkušenosti: neovlivňuje, který tip appka vybere,
 // jen jemně upraví tón zprávy.

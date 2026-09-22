@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import { RootStackParamList, ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, EmptyState, VarietyTag, colors } from '../components/ui';
+import WeatherRainChart from '../components/WeatherRainChart';
 import { useAppData } from '../context/AppDataContext';
 import { BED_TYPE_LABEL, formatDate } from '../utils/format';
 
@@ -34,6 +35,8 @@ export default function GardenDetailScreen({ navigation }: Props) {
           <Text style={styles.addLink}>+ Zaznamenat sklizeň</Text>
         </Pressable>
       </View>
+
+      <WeatherRainChart />
 
       <SectionTitle>Záhony</SectionTitle>
       {beds.length === 0 ? (

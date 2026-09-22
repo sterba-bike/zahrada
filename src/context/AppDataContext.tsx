@@ -34,6 +34,7 @@ interface AppDataState {
 interface AppDataActions {
   createGarden: (data: Pick<Garden, 'name' | 'location'> & Partial<Garden>) => Promise<Garden>;
   switchGarden: (gardenId: string) => Promise<void>;
+  updateGarden: (gardenId: string, data: Partial<Pick<Garden, 'lat' | 'lon'>>) => Promise<void>;
   addBed: (data: Omit<Bed, 'id' | 'gardenId'>) => Promise<Bed>;
   deleteBed: (bedId: string) => Promise<void>;
   addTree: (data: Omit<Tree, 'id' | 'gardenId'>) => Promise<Tree>;
@@ -132,6 +133,15 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const switchGarden = useCallback(async (gardenId: string) => {
     setActiveGardenId(gardenId);
     await saveItem(STORAGE_KEYS.activeGardenId, gardenId);
+  }, []);
+
+  // Zatím jen pro doplnění souřadnic dopočtených appkou z lokality (pro dotaz na počasí).
+  const updateGarden = useCallback(async (gardenId: string, data: Partial<Pick<Garden, 'lat' | 'lon'>>) => {
+    setGardens((prev) => {
+      const next = prev.map((g) => (g.id === gardenId ? { ...g, ...data } : g));
+      saveItem(STORAGE_KEYS.gardens, next);
+      return next;
+    });
   }, []);
 
   const addBed = useCallback(
@@ -373,6 +383,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       profile,
       createGarden,
       switchGarden,
+      updateGarden,
       addBed,
       deleteBed,
       addTree,
@@ -401,6 +412,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       profile,
       createGarden,
       switchGarden,
+      updateGarden,
       addBed,
       deleteBed,
       addTree,
