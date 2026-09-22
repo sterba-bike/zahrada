@@ -36,6 +36,10 @@ interface AppDataActions {
   addTree: (data: Omit<Tree, 'id' | 'gardenId'>) => Promise<Tree>;
   deleteTree: (treeId: string) => Promise<void>;
   addPlanting: (data: Omit<PlantingRecord, 'id'>) => Promise<PlantingRecord>;
+  updatePlanting: (
+    plantingId: string,
+    data: Pick<PlantingRecord, 'plantedAt' | 'year' | 'status' | 'variety' | 'varietyEarliness' | 'note'>
+  ) => Promise<void>;
   deletePlanting: (plantingId: string) => Promise<void>;
   addTask: (data: Omit<Task, 'id' | 'done'>) => Promise<Task>;
   completeTask: (taskId: string) => Promise<void>;
@@ -201,6 +205,20 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return newPlanting;
   }, []);
 
+  const updatePlanting = useCallback(
+    async (
+      plantingId: string,
+      data: Pick<PlantingRecord, 'plantedAt' | 'year' | 'status' | 'variety' | 'varietyEarliness' | 'note'>
+    ) => {
+      setPlantings((prev) => {
+        const next = prev.map((p) => (p.id === plantingId ? { ...p, ...data } : p));
+        saveItem(STORAGE_KEYS.plantings, next);
+        return next;
+      });
+    },
+    []
+  );
+
   // Smaže rostlinu i úkoly, které pro ni appka sama navrhla (viz plantingId v AddPlantScreen).
   const deletePlanting = useCallback(async (plantingId: string) => {
     setPlantings((prev) => {
@@ -298,6 +316,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addTree,
       deleteTree,
       addPlanting,
+      updatePlanting,
       deletePlanting,
       addTask,
       completeTask,
@@ -322,6 +341,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addTree,
       deleteTree,
       addPlanting,
+      updatePlanting,
       deletePlanting,
       addTask,
       completeTask,

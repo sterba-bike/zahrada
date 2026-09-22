@@ -63,9 +63,14 @@ export default function BedDetailScreen({ route, navigation }: Props) {
                       />
                     )}
                   </View>
-                  <Pressable onPress={() => setToDelete(p)} hitSlop={8}>
-                    <Text style={styles.deleteIcon}>🗑️</Text>
-                  </Pressable>
+                  <View style={styles.iconRow}>
+                    <Pressable onPress={() => navigation.navigate('EditPlant', { plantingId: p.id })} hitSlop={8}>
+                      <Text style={styles.deleteIcon}>✏️</Text>
+                    </Pressable>
+                    <Pressable onPress={() => setToDelete(p)} hitSlop={8}>
+                      <Text style={styles.deleteIcon}>🗑️</Text>
+                    </Pressable>
+                  </View>
                 </View>
                 <Text style={styles.itemMeta}>
                   Osazeno {formatDate(p.plantedAt)} · {species ? DIFFICULTY_LABEL[species.difficultyGroup] : ''} ·{' '}
@@ -149,6 +154,7 @@ const styles = StyleSheet.create({
   editedBy: { fontSize: 12, color: colors.textMuted, marginTop: 4, fontStyle: 'italic' },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
+  iconRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   deleteIcon: { fontSize: 18, marginLeft: 8 },
   itemName: { fontSize: 16, fontWeight: '700', color: colors.text },
   itemMeta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },

@@ -9,6 +9,7 @@ import TreeDetailScreen from '../screens/TreeDetailScreen';
 import AddBedScreen from '../screens/AddBedScreen';
 import AddTreeScreen from '../screens/AddTreeScreen';
 import AddPlantScreen from '../screens/AddPlantScreen';
+import EditPlantScreen from '../screens/EditPlantScreen';
 import JournalScreen from '../screens/JournalScreen';
 
 const Stack = createNativeStackNavigator<ZahradaStackParamList>();
@@ -27,6 +28,7 @@ export default function ZahradaStack() {
       <Stack.Screen name="AddBed" component={AddBedScreen} options={{ title: 'Nový záhon' }} />
       <Stack.Screen name="AddTree" component={AddTreeScreen} options={{ title: 'Nový strom/keř' }} />
       <Stack.Screen name="AddPlant" component={AddPlantScreen} options={{ title: 'Přidat rostlinu' }} />
+      <Stack.Screen name="EditPlant" component={EditPlantScreen} options={{ title: 'Upravit rostlinu' }} />
       <Stack.Screen name="Journal" component={JournalScreen} options={{ title: 'Deník' }} />
     </Stack.Navigator>
   );
