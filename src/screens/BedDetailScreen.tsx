@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
@@ -7,6 +7,7 @@ import { Screen, Card, SectionTitle, EmptyState, VarietyTag, colors } from '../c
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppData } from '../context/AppDataContext';
 import { getSpeciesById } from '../data/seedPlants';
+import { recommendNextPlanting, SAME_SPECIES_MIN_GAP_YEARS } from '../rules/cropRotation';
 import { BED_TYPE_LABEL, DIFFICULTY_LABEL, formatDate, formatDateTime, taskPlacesLabel } from '../utils/format';
 import { EARLINESS_LABEL, PlantingRecord } from '../types';
 
@@ -25,6 +26,15 @@ export default function BedDetailScreen({ route, navigation }: Props) {
   const bedTasks = tasks.filter((t) => t.bedIds.includes(bedId));
   const [toDelete, setToDelete] = useState<PlantingRecord | null>(null);
   const [confirmDeleteBed, setConfirmDeleteBed] = useState(false);
+
+  const currentYear = new Date().getFullYear();
+  const recommendation = useMemo(
+    () => recommendNextPlanting(plantings, currentYear),
+    [plantings, currentYear]
+  );
+  const avoidSpeciesNames = recommendation.avoidSpeciesIds
+    .map((id) => getSpeciesById(id)?.name ?? id)
+    .join(', ');
 
   if (!bed) {
     return (
@@ -90,6 +100,41 @@ export default function BedDetailScreen({ route, navigation }: Props) {
           </Pressable>
         </>
       )}
+
+      <SectionTitle>🌱 Doporučení pro příští osetí</SectionTitle>
+      <Card style={styles.recommendCard}>
+        {recommendation.avoidGroups.length > 0 ? (
+          <Text style={styles.recommendText}>
+            Loni tu rostla plodina ze skupiny{' '}
+            {recommendation.avoidGroups.map((g) => DIFFICULTY_LABEL[g]).join(', ')} - tuto skupinu letos
+            raději vynechejte, půda si potřebuje odpočinout.
+          </Text>
+        ) : (
+          <Text style={styles.recommendText}>
+            Podle loňské historie tu není potřeba žádnou skupinu vynechávat.
+          </Text>
+        )}
+        <Text style={styles.recommendText}>
+          Vhodné skupiny pro letošek: {recommendation.recommendedGroups.map((g) => DIFFICULTY_LABEL[g]).join(', ')}.
+        </Text>
+        {recommendation.avoidSpeciesIds.length > 0 && (
+          <Text style={styles.recommendText}>
+            Nesázejte znovu: {avoidSpeciesNames} (byly tu v posledních {SAME_SPECIES_MIN_GAP_YEARS} letech).
+          </Text>
+        )}
+        {recommendation.suggestedSpecies.length > 0 && (
+          <>
+            <Text style={styles.recommendLabel}>Tipy z encyklopedie:</Text>
+            <View style={styles.chipRow}>
+              {recommendation.suggestedSpecies.map((s) => (
+                <View key={s.id} style={styles.suggestChip}>
+                  <Text style={styles.suggestChipText}>{s.name}</Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+      </Card>
 
       <SectionTitle>Úkoly u tohoto záhonu</SectionTitle>
       {bedTasks.length === 0 ? (
@@ -171,4 +216,17 @@ const styles = StyleSheet.create({
   mutedText: { color: colors.textMuted, marginBottom: 8 },
   deleteBedButton: { marginTop: 24, alignSelf: 'flex-start' },
   deleteBedText: { color: colors.danger, fontWeight: '700', fontSize: 15 },
+  recommendCard: { backgroundColor: colors.primarySoft },
+  recommendText: { fontSize: 14, color: colors.text, marginBottom: 8, lineHeight: 20 },
+  recommendLabel: { fontSize: 13, fontWeight: '700', color: colors.textMuted, marginBottom: 6 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  suggestChip: {
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  suggestChipText: { fontSize: 13, fontWeight: '600', color: colors.primaryDark },
 });

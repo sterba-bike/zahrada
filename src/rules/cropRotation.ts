@@ -1,7 +1,7 @@
-import { PlantingRecord, PlantSpecies } from '../types';
-import { getSpeciesById } from '../data/seedPlants';
+import { DifficultyGroup, PlantingRecord, PlantSpecies } from '../types';
+import { getSpeciesById, SEED_PLANT_SPECIES } from '../data/seedPlants';
 
-const SAME_SPECIES_MIN_GAP_YEARS = 3;
+export const SAME_SPECIES_MIN_GAP_YEARS = 3;
 
 export interface RotationWarning {
   kind: 'same_species' | 'same_difficulty_group';
@@ -45,6 +45,58 @@ export function checkCropRotation(
   }
 
   return warnings;
+}
+
+export interface PlantingRecommendation {
+  lastYearGroups: DifficultyGroup[];
+  avoidGroups: DifficultyGroup[];
+  recommendedGroups: DifficultyGroup[];
+  avoidSpeciesIds: string[];
+  suggestedSpecies: PlantSpecies[];
+}
+
+// Aktivní doporučení pro příští osetí v detailu záhonu (spec sekce 3, "Detail
+// záhonu"): na základě až 4leté historie navrhne vhodnou skupinu náročnosti
+// a pár konkrétních druhů - stejná pravidla jako 5.1/5.2, jen aktivně navrhují
+// místo pasivního varování při výběru konkrétní rostliny.
+export function recommendNextPlanting(bedHistory: PlantingRecord[], currentYear: number): PlantingRecommendation {
+  const lastYearPlantings = bedHistory.filter((p) => p.year === currentYear - 1);
+  const lastYearGroups = Array.from(
+    new Set(
+      lastYearPlantings
+        .map((p) => getSpeciesById(p.speciesId)?.difficultyGroup)
+        .filter((g): g is DifficultyGroup => !!g)
+    )
+  );
+  // Luskoviny půdu obohacují, takže se nikdy nepovažují za skupinu k vynechání.
+  const avoidGroups: DifficultyGroup[] = lastYearGroups.filter((g) => g !== 'luskovina');
+
+  const allGroups: DifficultyGroup[] = ['luskovina', 'mene_narocna', 'stredne_narocna', 'narocna'];
+  const recommendedGroups =
+    avoidGroups.length === 0 ? allGroups : allGroups.filter((g) => !avoidGroups.includes(g));
+
+  const avoidSpeciesIds = Array.from(
+    new Set(
+      bedHistory
+        .filter((p) => currentYear - p.year < SAME_SPECIES_MIN_GAP_YEARS && currentYear - p.year >= 0)
+        .map((p) => p.speciesId)
+    )
+  );
+
+  const currentlyGrowingIds = bedHistory
+    .filter((p) => p.year === currentYear && p.status.trim().toLowerCase() === 'roste')
+    .map((p) => p.speciesId);
+
+  const suggestedSpecies = SEED_PLANT_SPECIES.filter((species) => {
+    if (!recommendedGroups.includes(species.difficultyGroup)) return false;
+    if (avoidSpeciesIds.includes(species.id)) return false;
+    const clashesWithCurrent = currentlyGrowingIds.some((growingId) =>
+      species.badCompanions.some((b) => b.speciesId === growingId)
+    );
+    return !clashesWithCurrent;
+  }).slice(0, 6);
+
+  return { lastYearGroups, avoidGroups, recommendedGroups, avoidSpeciesIds, suggestedSpecies };
 }
 
 export interface CompanionWarning {
