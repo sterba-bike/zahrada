@@ -31,6 +31,8 @@ export type ZahradaStackParamList = {
   HarvestOverview: undefined;
   MyGardens: undefined;
   AddGarden: undefined;
+  ShareGarden: undefined;
+  JoinGarden: undefined;
 };
 
 // Vlastní stack v záložce Eko - ze stejného důvodu jako u Zahrady.

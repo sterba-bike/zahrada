@@ -16,14 +16,13 @@ export default function MyGardensScreen({ navigation }: Props) {
       {gardens.map((g) => {
         const active = g.id === activeGardenId;
         return (
-          <Pressable
-            key={g.id}
-            onPress={() => {
-              if (!active) switchGarden(g.id);
-              navigation.navigate('GardenDetail');
-            }}
-          >
-            <Card style={[styles.gardenCard, active && styles.gardenCardActive]}>
+          <Card key={g.id} style={[styles.gardenCard, active && styles.gardenCardActive]}>
+            <Pressable
+              onPress={() => {
+                if (!active) switchGarden(g.id);
+                navigation.navigate('GardenDetail');
+              }}
+            >
               <View style={styles.rowBetween}>
                 <View>
                   <Text style={styles.gardenName}>{g.name}</Text>
@@ -31,13 +30,35 @@ export default function MyGardensScreen({ navigation }: Props) {
                 </View>
                 {active && <Text style={styles.activeBadge}>Aktivní</Text>}
               </View>
-            </Card>
-          </Pressable>
+            </Pressable>
+            {g.shared ? (
+              <Pressable
+                onPress={() => {
+                  if (!active) switchGarden(g.id);
+                  navigation.navigate('ShareGarden');
+                }}
+              >
+                <Text style={styles.sharedBadge}>👥 Sdíleno · zobrazit kód pozvánky</Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => {
+                  if (!active) switchGarden(g.id);
+                  navigation.navigate('ShareGarden');
+                }}
+              >
+                <Text style={styles.shareLink}>🔗 Sdílet tuto zahradu</Text>
+              </Pressable>
+            )}
+          </Card>
         );
       })}
 
       <Pressable onPress={() => navigation.navigate('AddGarden')}>
         <Text style={styles.addLink}>+ Přidat další zahradu</Text>
+      </Pressable>
+      <Pressable onPress={() => navigation.navigate('JoinGarden')}>
+        <Text style={styles.addLink}>+ Připojit se ke sdílené zahradě</Text>
       </Pressable>
     </Screen>
   );
@@ -51,4 +72,6 @@ const styles = StyleSheet.create({
   gardenLocation: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   activeBadge: { color: colors.primaryDark, fontWeight: '700', fontSize: 12 },
   addLink: { color: colors.primary, fontWeight: '600', marginTop: 8 },
+  sharedBadge: { color: colors.primaryDark, fontWeight: '600', fontSize: 13, marginTop: 10 },
+  shareLink: { color: colors.primary, fontWeight: '600', fontSize: 13, marginTop: 10 },
 });

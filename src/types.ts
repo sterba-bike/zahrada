@@ -19,6 +19,21 @@ export interface Garden {
   orientation?: string;
   slope?: string;
   createdAt: string;
+  // Sdílení zahrady (V3) - zahrada je buď čistě lokální (nic z tohoto nevyplněno),
+  // nebo sdílená přes Firebase (obsah pak appka čte/zapisuje do Firestore, ne AsyncStorage).
+  shared?: boolean;
+  ownerId?: string;
+  inviteCode?: string;
+}
+
+export type MembershipRole = 'vlastnik' | 'clen';
+
+export interface Membership {
+  uid: string;
+  email: string;
+  role: MembershipRole;
+  invitedAt: string;
+  acceptedAt: string;
 }
 
 export interface WeatherDay {

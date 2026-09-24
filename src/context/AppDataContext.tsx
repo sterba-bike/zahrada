@@ -1,10 +1,22 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { generateId, loadItem, saveItem, STORAGE_KEYS } from '../data/storage';
+import { useAuth } from './AuthContext';
+import {
+  shareGardenInCloud,
+  joinGardenByCode,
+  subscribeGardenCollection,
+  subscribeMembers,
+  setGardenDoc,
+  deleteBedCascadeCloud,
+  deleteTreeCascadeCloud,
+  deletePlantingCascadeCloud,
+} from '../firebase/firestore';
 import {
   Bed,
   Garden,
   Harvest,
   JournalEntry,
+  Membership,
   PlantingRecord,
   Profile,
   Task,
@@ -28,6 +40,7 @@ interface AppDataState {
   tasks: Task[];
   journal: JournalEntry[];
   harvests: Harvest[];
+  members: Membership[];
   profile: Profile;
 }
 
@@ -35,6 +48,8 @@ interface AppDataActions {
   createGarden: (data: Pick<Garden, 'name' | 'location'> & Partial<Garden>) => Promise<Garden>;
   switchGarden: (gardenId: string) => Promise<void>;
   updateGarden: (gardenId: string, data: Partial<Pick<Garden, 'lat' | 'lon'>>) => Promise<void>;
+  shareGarden: () => Promise<string>;
+  joinGarden: (code: string) => Promise<void>;
   addBed: (data: Omit<Bed, 'id' | 'gardenId'>) => Promise<Bed>;
   deleteBed: (bedId: string) => Promise<void>;
   addTree: (data: Omit<Tree, 'id' | 'gardenId'>) => Promise<Tree>;
@@ -67,6 +82,50 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [journal, setJournal] = useState<JournalEntry[]>([]);
   const [harvests, setHarvests] = useState<Harvest[]>([]);
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
+  const { user } = useAuth();
+
+  // Obsah sdílené zahrady neleží v AsyncStorage, ale ve Firestore - appka ho
+  // živě sleduje (onSnapshot), dokud je daná sdílená zahrada aktivní.
+  const [cloudBeds, setCloudBeds] = useState<Bed[]>([]);
+  const [cloudTrees, setCloudTrees] = useState<Tree[]>([]);
+  const [cloudPlantings, setCloudPlantings] = useState<PlantingRecord[]>([]);
+  const [cloudTasks, setCloudTasks] = useState<Task[]>([]);
+  const [cloudJournal, setCloudJournal] = useState<JournalEntry[]>([]);
+  const [cloudHarvests, setCloudHarvests] = useState<Harvest[]>([]);
+  const [cloudMembers, setCloudMembers] = useState<Membership[]>([]);
+
+  useEffect(() => {
+    if (!garden?.shared) {
+      setCloudBeds([]);
+      setCloudTrees([]);
+      setCloudPlantings([]);
+      setCloudTasks([]);
+      setCloudJournal([]);
+      setCloudHarvests([]);
+      setCloudMembers([]);
+      return;
+    }
+    const gardenId = garden.id;
+    const unsubscribers = [
+      subscribeGardenCollection<Bed>(gardenId, 'beds', setCloudBeds),
+      subscribeGardenCollection<Tree>(gardenId, 'trees', setCloudTrees),
+      subscribeGardenCollection<PlantingRecord>(gardenId, 'plantings', setCloudPlantings),
+      subscribeGardenCollection<Task>(gardenId, 'tasks', setCloudTasks),
+      subscribeGardenCollection<JournalEntry>(gardenId, 'journal', setCloudJournal),
+      subscribeGardenCollection<Harvest>(gardenId, 'harvests', setCloudHarvests),
+      subscribeMembers(gardenId, setCloudMembers),
+    ];
+    return () => unsubscribers.forEach((unsub) => unsub());
+  }, [garden?.id, garden?.shared]);
+
+  // Zdroj pravdy pro obsah aktivní zahrady - lokální AsyncStorage data, nebo
+  // živá Firestore data, podle toho, jestli je zahrada sdílená.
+  const activeBeds = garden?.shared ? cloudBeds : beds.filter((b) => b.gardenId === activeGardenId);
+  const activeTrees = garden?.shared ? cloudTrees : trees.filter((t) => t.gardenId === activeGardenId);
+  const activeTasks = garden?.shared ? cloudTasks : tasks.filter((t) => t.gardenId === activeGardenId);
+  const activeHarvests = garden?.shared ? cloudHarvests : harvests.filter((h) => h.gardenId === activeGardenId);
+  const activePlantings = garden?.shared ? cloudPlantings : plantings;
+  const activeJournal = garden?.shared ? cloudJournal : journal;
 
   useEffect(() => {
     (async () => {
@@ -144,6 +203,84 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  // Přepne aktivní zahradu z čistě lokální na sdílenou - nahraje dosavadní
+  // obsah do Firestore a vrátí kód pozvánky pro ostatní členy.
+  const shareGarden = useCallback(async () => {
+    if (!garden) throw new Error('no_active_garden');
+    if (!user) throw new Error('not_signed_in');
+
+    const gardenBedIds = new Set(beds.filter((b) => b.gardenId === garden.id).map((b) => b.id));
+    const gardenTreeIds = new Set(trees.filter((t) => t.gardenId === garden.id).map((t) => t.id));
+    const content = {
+      beds: beds.filter((b) => b.gardenId === garden.id),
+      trees: trees.filter((t) => t.gardenId === garden.id),
+      plantings: plantings.filter((p) => gardenBedIds.has(p.bedId)),
+      tasks: tasks.filter((t) => t.gardenId === garden.id),
+      journal: journal.filter((j) => (j.bedId && gardenBedIds.has(j.bedId)) || (j.treeId && gardenTreeIds.has(j.treeId))),
+      harvests: harvests.filter((h) => h.gardenId === garden.id),
+    };
+
+    const code = await shareGardenInCloud(garden, user.uid, user.email ?? '', content);
+    const updatedGarden: Garden = { ...garden, shared: true, ownerId: user.uid, inviteCode: code };
+    setGardens((prev) => {
+      const next = prev.map((g) => (g.id === garden.id ? updatedGarden : g));
+      saveItem(STORAGE_KEYS.gardens, next);
+      return next;
+    });
+
+    // Lokální kopie appka po přepnutí na cloud dál nepotřebuje - smaže je,
+    // ať nevznikne duplicita mezi lokálními daty a Firestore.
+    setBeds((prev) => {
+      const next = prev.filter((b) => b.gardenId !== garden.id);
+      saveItem(STORAGE_KEYS.beds, next);
+      return next;
+    });
+    setTrees((prev) => {
+      const next = prev.filter((t) => t.gardenId !== garden.id);
+      saveItem(STORAGE_KEYS.trees, next);
+      return next;
+    });
+    setTasks((prev) => {
+      const next = prev.filter((t) => t.gardenId !== garden.id);
+      saveItem(STORAGE_KEYS.tasks, next);
+      return next;
+    });
+    setHarvests((prev) => {
+      const next = prev.filter((h) => h.gardenId !== garden.id);
+      saveItem(STORAGE_KEYS.harvests, next);
+      return next;
+    });
+    setPlantings((prev) => {
+      const next = prev.filter((p) => !gardenBedIds.has(p.bedId));
+      saveItem(STORAGE_KEYS.plantings, next);
+      return next;
+    });
+    setJournal((prev) => {
+      const next = prev.filter((j) => !((j.bedId && gardenBedIds.has(j.bedId)) || (j.treeId && gardenTreeIds.has(j.treeId))));
+      saveItem(STORAGE_KEYS.journal, next);
+      return next;
+    });
+
+    return code;
+  }, [garden, user, beds, trees, plantings, tasks, journal, harvests]);
+
+  // Připojí přihlášeného uživatele ke sdílené zahradě podle kódu pozvánky.
+  const joinGarden = useCallback(
+    async (code: string) => {
+      if (!user) throw new Error('not_signed_in');
+      const joined = await joinGardenByCode(code, user.uid, user.email ?? '');
+      setGardens((prev) => {
+        if (prev.some((g) => g.id === joined.id)) return prev;
+        const next = [...prev, joined];
+        saveItem(STORAGE_KEYS.gardens, next);
+        return next;
+      });
+      setActiveGardenId(joined.id);
+      await saveItem(STORAGE_KEYS.activeGardenId, joined.id);
+    },
+    [user]
+  );
+
   const addBed = useCallback(
     async (data: Omit<Bed, 'id' | 'gardenId'>) => {
       const newBed: Bed = {
@@ -153,6 +290,10 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         lastEditedBy: profile.name,
         lastEditedAt: new Date().toISOString(),
       };
+      if (garden?.shared) {
+        await setGardenDoc(garden.id, 'beds', newBed.id, newBed);
+        return newBed;
+      }
       setBeds((prev) => {
         const next = [...prev, newBed];
         saveItem(STORAGE_KEYS.beds, next);
@@ -165,6 +306,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   const deleteBed = useCallback(
     async (bedId: string) => {
+      if (garden?.shared) {
+        await deleteBedCascadeCloud(garden.id, bedId, activePlantings, activeTasks, activeJournal, activeHarvests);
+        return;
+      }
+
       const bedPlantingIds = new Set(plantings.filter((p) => p.bedId === bedId).map((p) => p.id));
 
       setPlantings((prev) => {
@@ -202,7 +348,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
     },
-    [plantings]
+    [garden, plantings, activePlantings, activeTasks, activeJournal, activeHarvests]
   );
 
   const addTree = useCallback(
@@ -214,6 +360,10 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         lastEditedBy: profile.name,
         lastEditedAt: new Date().toISOString(),
       };
+      if (garden?.shared) {
+        await setGardenDoc(garden.id, 'trees', newTree.id, newTree);
+        return newTree;
+      }
       setTrees((prev) => {
         const next = [...prev, newTree];
         saveItem(STORAGE_KEYS.trees, next);
@@ -224,97 +374,131 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     [garden, profile.name]
   );
 
-  const deleteTree = useCallback(async (treeId: string) => {
-    setTasks((prev) => {
-      const next = prev
-        .map((t) => (t.treeIds.includes(treeId) ? { ...t, treeIds: t.treeIds.filter((id) => id !== treeId) } : t))
-        .filter((t) => t.bedIds.length > 0 || t.treeIds.length > 0);
-      saveItem(STORAGE_KEYS.tasks, next);
-      return next;
-    });
+  const deleteTree = useCallback(
+    async (treeId: string) => {
+      if (garden?.shared) {
+        await deleteTreeCascadeCloud(garden.id, treeId, activeTasks, activeJournal, activeHarvests);
+        return;
+      }
 
-    setJournal((prev) => {
-      const next = prev.filter((e) => e.treeId !== treeId);
-      saveItem(STORAGE_KEYS.journal, next);
-      return next;
-    });
+      setTasks((prev) => {
+        const next = prev
+          .map((t) => (t.treeIds.includes(treeId) ? { ...t, treeIds: t.treeIds.filter((id) => id !== treeId) } : t))
+          .filter((t) => t.bedIds.length > 0 || t.treeIds.length > 0);
+        saveItem(STORAGE_KEYS.tasks, next);
+        return next;
+      });
 
-    // Sklizeň se nemaže (počítá se do Přehledu sklizně za celou zahradu),
-    // jen se odpojí vazba na smazaný strom/keř.
-    setHarvests((prev) => {
-      const next = prev.map((h) => (h.treeId === treeId ? { ...h, treeId: undefined } : h));
-      saveItem(STORAGE_KEYS.harvests, next);
-      return next;
-    });
+      setJournal((prev) => {
+        const next = prev.filter((e) => e.treeId !== treeId);
+        saveItem(STORAGE_KEYS.journal, next);
+        return next;
+      });
 
-    setTrees((prev) => {
-      const next = prev.filter((t) => t.id !== treeId);
-      saveItem(STORAGE_KEYS.trees, next);
-      return next;
-    });
-  }, []);
+      // Sklizeň se nemaže (počítá se do Přehledu sklizně za celou zahradu),
+      // jen se odpojí vazba na smazaný strom/keř.
+      setHarvests((prev) => {
+        const next = prev.map((h) => (h.treeId === treeId ? { ...h, treeId: undefined } : h));
+        saveItem(STORAGE_KEYS.harvests, next);
+        return next;
+      });
 
-  const addPlanting = useCallback(async (data: Omit<PlantingRecord, 'id'>) => {
-    const newPlanting: PlantingRecord = { ...data, id: generateId() };
-    setPlantings((prev) => {
-      const next = [...prev, newPlanting];
-      saveItem(STORAGE_KEYS.plantings, next);
-      return next;
-    });
-    return newPlanting;
-  }, []);
+      setTrees((prev) => {
+        const next = prev.filter((t) => t.id !== treeId);
+        saveItem(STORAGE_KEYS.trees, next);
+        return next;
+      });
+    },
+    [garden, activeTasks, activeJournal, activeHarvests]
+  );
+
+  const addPlanting = useCallback(
+    async (data: Omit<PlantingRecord, 'id'>) => {
+      const newPlanting: PlantingRecord = { ...data, id: generateId() };
+      if (garden?.shared) {
+        await setGardenDoc(garden.id, 'plantings', newPlanting.id, newPlanting);
+        return newPlanting;
+      }
+      setPlantings((prev) => {
+        const next = [...prev, newPlanting];
+        saveItem(STORAGE_KEYS.plantings, next);
+        return next;
+      });
+      return newPlanting;
+    },
+    [garden]
+  );
 
   const updatePlanting = useCallback(
     async (
       plantingId: string,
       data: Pick<PlantingRecord, 'plantedAt' | 'year' | 'status' | 'variety' | 'varietyEarliness' | 'note'>
     ) => {
+      if (garden?.shared) {
+        await setGardenDoc(garden.id, 'plantings', plantingId, data);
+        return;
+      }
       setPlantings((prev) => {
         const next = prev.map((p) => (p.id === plantingId ? { ...p, ...data } : p));
         saveItem(STORAGE_KEYS.plantings, next);
         return next;
       });
     },
-    []
+    [garden]
   );
 
   // Smaže rostlinu i úkoly, které pro ni appka sama navrhla (viz plantingId v AddPlantScreen).
-  const deletePlanting = useCallback(async (plantingId: string) => {
-    setPlantings((prev) => {
-      const next = prev.filter((p) => p.id !== plantingId);
-      saveItem(STORAGE_KEYS.plantings, next);
-      return next;
-    });
-    setTasks((prev) => {
-      const next = prev.filter((t) => t.plantingId !== plantingId);
-      saveItem(STORAGE_KEYS.tasks, next);
-      return next;
-    });
-  }, []);
-
-  const addTask = useCallback(async (data: Omit<Task, 'id' | 'done'>) => {
-    const newTask: Task = { ...data, id: generateId(), done: false };
-    setTasks((prev) => {
-      const next = [...prev, newTask];
-      saveItem(STORAGE_KEYS.tasks, next);
-      return next;
-    });
-    return newTask;
-  }, []);
-
-  const completeTask = useCallback(
-    async (taskId: string) => {
+  const deletePlanting = useCallback(
+    async (plantingId: string) => {
+      if (garden?.shared) {
+        await deletePlantingCascadeCloud(garden.id, plantingId, activeTasks);
+        return;
+      }
+      setPlantings((prev) => {
+        const next = prev.filter((p) => p.id !== plantingId);
+        saveItem(STORAGE_KEYS.plantings, next);
+        return next;
+      });
       setTasks((prev) => {
-        const next = prev.map((t) =>
-          t.id === taskId
-            ? { ...t, done: true, doneBy: profile.name, doneAt: new Date().toISOString() }
-            : t
-        );
+        const next = prev.filter((t) => t.plantingId !== plantingId);
         saveItem(STORAGE_KEYS.tasks, next);
         return next;
       });
     },
-    [profile.name]
+    [garden, activeTasks]
+  );
+
+  const addTask = useCallback(
+    async (data: Omit<Task, 'id' | 'done'>) => {
+      const newTask: Task = { ...data, id: generateId(), done: false };
+      if (garden?.shared) {
+        await setGardenDoc(garden.id, 'tasks', newTask.id, newTask);
+        return newTask;
+      }
+      setTasks((prev) => {
+        const next = [...prev, newTask];
+        saveItem(STORAGE_KEYS.tasks, next);
+        return next;
+      });
+      return newTask;
+    },
+    [garden]
+  );
+
+  const completeTask = useCallback(
+    async (taskId: string) => {
+      const doneData = { done: true, doneBy: profile.name, doneAt: new Date().toISOString() };
+      if (garden?.shared) {
+        await setGardenDoc(garden.id, 'tasks', taskId, doneData);
+        return;
+      }
+      setTasks((prev) => {
+        const next = prev.map((t) => (t.id === taskId ? { ...t, ...doneData } : t));
+        saveItem(STORAGE_KEYS.tasks, next);
+        return next;
+      });
+    },
+    [garden, profile.name]
   );
 
   const addJournalEntry = useCallback(
@@ -325,6 +509,10 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         lastEditedBy: profile.name,
         lastEditedAt: new Date().toISOString(),
       };
+      if (garden?.shared) {
+        await setGardenDoc(garden.id, 'journal', newEntry.id, newEntry);
+        return newEntry;
+      }
       setJournal((prev) => {
         const next = [newEntry, ...prev];
         saveItem(STORAGE_KEYS.journal, next);
@@ -332,18 +520,25 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       });
       return newEntry;
     },
-    [profile.name]
+    [garden, profile.name]
   );
 
-  const addHarvest = useCallback(async (data: Omit<Harvest, 'id'>) => {
-    const newHarvest: Harvest = { ...data, id: generateId() };
-    setHarvests((prev) => {
-      const next = [newHarvest, ...prev];
-      saveItem(STORAGE_KEYS.harvests, next);
-      return next;
-    });
-    return newHarvest;
-  }, []);
+  const addHarvest = useCallback(
+    async (data: Omit<Harvest, 'id'>) => {
+      const newHarvest: Harvest = { ...data, id: generateId() };
+      if (garden?.shared) {
+        await setGardenDoc(garden.id, 'harvests', newHarvest.id, newHarvest);
+        return newHarvest;
+      }
+      setHarvests((prev) => {
+        const next = [newHarvest, ...prev];
+        saveItem(STORAGE_KEYS.harvests, next);
+        return next;
+      });
+      return newHarvest;
+    },
+    [garden]
+  );
 
   const updateProfile = useCallback(async (data: Partial<Profile>) => {
     setProfile((prev) => {
@@ -354,18 +549,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const bedHistory = useCallback(
-    (bedId: string) => plantings.filter((p) => p.bedId === bedId),
-    [plantings]
-  );
-
-  // Appka drží data všech zahrad pohromadě (jedno AsyncStorage pole), ale ven
-  // vystavuje vždy jen to, co patří k právě aktivní zahradě.
-  const gardenBeds = useMemo(() => beds.filter((b) => b.gardenId === activeGardenId), [beds, activeGardenId]);
-  const gardenTrees = useMemo(() => trees.filter((t) => t.gardenId === activeGardenId), [trees, activeGardenId]);
-  const gardenTasks = useMemo(() => tasks.filter((t) => t.gardenId === activeGardenId), [tasks, activeGardenId]);
-  const gardenHarvests = useMemo(
-    () => harvests.filter((h) => h.gardenId === activeGardenId),
-    [harvests, activeGardenId]
+    (bedId: string) => activePlantings.filter((p) => p.bedId === bedId),
+    [activePlantings]
   );
 
   const value = useMemo(
@@ -374,16 +559,19 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       gardens,
       activeGardenId,
       garden,
-      beds: gardenBeds,
-      trees: gardenTrees,
-      plantings,
-      tasks: gardenTasks,
-      journal,
-      harvests: gardenHarvests,
+      beds: activeBeds,
+      trees: activeTrees,
+      plantings: activePlantings,
+      tasks: activeTasks,
+      journal: activeJournal,
+      harvests: activeHarvests,
+      members: cloudMembers,
       profile,
       createGarden,
       switchGarden,
       updateGarden,
+      shareGarden,
+      joinGarden,
       addBed,
       deleteBed,
       addTree,
@@ -403,16 +591,19 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       gardens,
       activeGardenId,
       garden,
-      gardenBeds,
-      gardenTrees,
-      plantings,
-      gardenTasks,
-      journal,
-      gardenHarvests,
+      activeBeds,
+      activeTrees,
+      activePlantings,
+      activeTasks,
+      activeJournal,
+      activeHarvests,
+      cloudMembers,
       profile,
       createGarden,
       switchGarden,
       updateGarden,
+      shareGarden,
+      joinGarden,
       addBed,
       deleteBed,
       addTree,
