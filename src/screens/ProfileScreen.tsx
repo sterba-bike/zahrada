@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { Screen, TextField, Card, SectionTitle, colors } from '../components/ui';
+import AccountSection from '../components/AccountSection';
 import { useAppData } from '../context/AppDataContext';
 import { ExperienceLevel } from '../types';
 
@@ -56,6 +57,9 @@ export default function ProfileScreen() {
         <Text style={styles.planText}>{garden?.name}</Text>
         <Text style={styles.planMeta}>{garden?.location}</Text>
       </Card>
+
+      <SectionTitle>Sdílení a účet</SectionTitle>
+      <AccountSection />
 
       <SectionTitle>Soukromí a data</SectionTitle>
       <Card>
