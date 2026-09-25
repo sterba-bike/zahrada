@@ -20,10 +20,11 @@ type Props = CompositeScreenProps<
 
 export default function BedDetailScreen({ route, navigation }: Props) {
   const { bedId } = route.params;
-  const { beds, trees, tasks, bedHistory, deletePlanting, deleteBed } = useAppData();
+  const { beds, trees, tasks, photoDiagnoses, bedHistory, deletePlanting, deleteBed } = useAppData();
   const bed = beds.find((b) => b.id === bedId);
   const plantings = bedHistory(bedId).sort((a, b) => b.year - a.year);
   const bedTasks = tasks.filter((t) => t.bedIds.includes(bedId));
+  const bedDiagnoses = photoDiagnoses.filter((d) => d.bedId === bedId);
   const [toDelete, setToDelete] = useState<PlantingRecord | null>(null);
   const [confirmDeleteBed, setConfirmDeleteBed] = useState(false);
 
@@ -152,6 +153,23 @@ export default function BedDetailScreen({ route, navigation }: Props) {
           </Card>
         ))
       )}
+
+      <SectionTitle>🔍 Rozpoznání chorob/škůdců</SectionTitle>
+      {bedDiagnoses.length === 0 ? (
+        <Text style={styles.mutedText}>Zatím žádný odhad z fotky.</Text>
+      ) : (
+        bedDiagnoses.map((d) => (
+          <Card key={d.id}>
+            <Text style={styles.itemName}>{d.diagnosis}</Text>
+            <Text style={styles.itemMeta}>
+              {d.confidencePercent}% jistota · {formatDate(d.date)}
+            </Text>
+          </Card>
+        ))
+      )}
+      <Pressable onPress={() => navigation.navigate('DiagnosePhoto', { bedId })}>
+        <Text style={styles.addLink}>🔍 Rozpoznat chorobu/škůdce</Text>
+      </Pressable>
 
       <SectionTitle>Deník záhonu</SectionTitle>
       <Pressable

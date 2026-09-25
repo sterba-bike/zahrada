@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   tasks: '@ekozahradka/tasks',
   journal: '@ekozahradka/journal',
   harvests: '@ekozahradka/harvests',
+  photoDiagnoses: '@ekozahradka/photoDiagnoses',
   profile: '@ekozahradka/profile',
 } as const;
 

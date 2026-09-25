@@ -18,9 +18,10 @@ type Props = CompositeScreenProps<
 
 export default function TreeDetailScreen({ route, navigation }: Props) {
   const { treeId } = route.params;
-  const { beds, trees, tasks, deleteTree } = useAppData();
+  const { beds, trees, tasks, photoDiagnoses, deleteTree } = useAppData();
   const tree = trees.find((t) => t.id === treeId);
   const treeTasks = tasks.filter((t) => t.treeIds.includes(treeId));
+  const treeDiagnoses = photoDiagnoses.filter((d) => d.treeId === treeId);
   const [confirmDeleteTree, setConfirmDeleteTree] = useState(false);
 
   if (!tree) {
@@ -75,6 +76,23 @@ export default function TreeDetailScreen({ route, navigation }: Props) {
           </Card>
         ))
       )}
+
+      <SectionTitle>🔍 Rozpoznání chorob/škůdců</SectionTitle>
+      {treeDiagnoses.length === 0 ? (
+        <Text style={styles.mutedText}>Zatím žádný odhad z fotky.</Text>
+      ) : (
+        treeDiagnoses.map((d) => (
+          <Card key={d.id}>
+            <Text style={styles.itemName}>{d.diagnosis}</Text>
+            <Text style={styles.itemMeta}>
+              {d.confidencePercent}% jistota · {formatDate(d.date)}
+            </Text>
+          </Card>
+        ))
+      )}
+      <Pressable onPress={() => navigation.navigate('DiagnosePhoto', { treeId })}>
+        <Text style={styles.addLink}>🔍 Rozpoznat chorobu/škůdce</Text>
+      </Pressable>
 
       <SectionTitle>Deník</SectionTitle>
       <Pressable

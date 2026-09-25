@@ -145,6 +145,7 @@ export default function HomeScreen({ navigation }: Props) {
         onWriteNote={() => navigation.navigate('AddJournalEntry', {})}
         onRecordHarvest={() => navigation.navigate('RecordHarvest')}
         onCompleteTask={() => navigation.navigate('CompleteTask')}
+        onDiagnosePhoto={() => navigation.navigate('DiagnosePhoto', {})}
       />
     </Screen>
   );

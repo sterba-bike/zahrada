@@ -17,6 +17,7 @@ import {
   Harvest,
   JournalEntry,
   Membership,
+  PhotoDiagnosis,
   PlantingRecord,
   Profile,
   Task,
@@ -41,6 +42,7 @@ interface AppDataState {
   journal: JournalEntry[];
   harvests: Harvest[];
   members: Membership[];
+  photoDiagnoses: PhotoDiagnosis[];
   profile: Profile;
 }
 
@@ -64,6 +66,7 @@ interface AppDataActions {
   completeTask: (taskId: string) => Promise<void>;
   addJournalEntry: (data: Omit<JournalEntry, 'id' | 'lastEditedBy' | 'lastEditedAt'>) => Promise<JournalEntry>;
   addHarvest: (data: Omit<Harvest, 'id'>) => Promise<Harvest>;
+  addPhotoDiagnosis: (data: Omit<PhotoDiagnosis, 'id' | 'date'>) => Promise<PhotoDiagnosis>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   bedHistory: (bedId: string) => PlantingRecord[];
 }
@@ -81,6 +84,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [journal, setJournal] = useState<JournalEntry[]>([]);
   const [harvests, setHarvests] = useState<Harvest[]>([]);
+  const [photoDiagnoses, setPhotoDiagnoses] = useState<PhotoDiagnosis[]>([]);
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
   const { user } = useAuth();
 
@@ -129,7 +133,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      let [loadedGardens, loadedActiveId, b, t, p, tk, j, h, pr] = await Promise.all([
+      let [loadedGardens, loadedActiveId, b, t, p, tk, j, h, pd, pr] = await Promise.all([
         loadItem<Garden[]>(STORAGE_KEYS.gardens, []),
         loadItem<string | null>(STORAGE_KEYS.activeGardenId, null),
         loadItem<Bed[]>(STORAGE_KEYS.beds, []),
@@ -138,6 +142,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         loadItem<Task[]>(STORAGE_KEYS.tasks, []),
         loadItem<JournalEntry[]>(STORAGE_KEYS.journal, []),
         loadItem<Harvest[]>(STORAGE_KEYS.harvests, []),
+        loadItem<PhotoDiagnosis[]>(STORAGE_KEYS.photoDiagnoses, []),
         loadItem<Profile>(STORAGE_KEYS.profile, DEFAULT_PROFILE),
       ]);
 
@@ -163,6 +168,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       setTasks(tk);
       setJournal(j);
       setHarvests(h);
+      setPhotoDiagnoses(pd);
       setProfile(pr);
       setLoading(false);
     })();
@@ -540,6 +546,18 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     [garden]
   );
 
+  // Zůstává lokální i pro sdílené zahrady - jde o osobní odhad ze zařízení,
+  // sdílení mezi členy zahrady zatím spec nevyžaduje.
+  const addPhotoDiagnosis = useCallback(async (data: Omit<PhotoDiagnosis, 'id' | 'date'>) => {
+    const newDiagnosis: PhotoDiagnosis = { ...data, id: generateId(), date: new Date().toISOString() };
+    setPhotoDiagnoses((prev) => {
+      const next = [newDiagnosis, ...prev];
+      saveItem(STORAGE_KEYS.photoDiagnoses, next);
+      return next;
+    });
+    return newDiagnosis;
+  }, []);
+
   const updateProfile = useCallback(async (data: Partial<Profile>) => {
     setProfile((prev) => {
       const next = { ...prev, ...data };
@@ -566,6 +584,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       journal: activeJournal,
       harvests: activeHarvests,
       members: cloudMembers,
+      photoDiagnoses,
       profile,
       createGarden,
       switchGarden,
@@ -583,6 +602,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       completeTask,
       addJournalEntry,
       addHarvest,
+      addPhotoDiagnosis,
       updateProfile,
       bedHistory,
     }),
@@ -598,6 +618,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       activeJournal,
       activeHarvests,
       cloudMembers,
+      photoDiagnoses,
       profile,
       createGarden,
       switchGarden,
@@ -615,6 +636,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       completeTask,
       addJournalEntry,
       addHarvest,
+      addPhotoDiagnosis,
       updateProfile,
       bedHistory,
     ]

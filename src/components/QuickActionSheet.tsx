@@ -9,6 +9,7 @@ interface Props {
   onWriteNote: () => void;
   onRecordHarvest: () => void;
   onCompleteTask: () => void;
+  onDiagnosePhoto: () => void;
 }
 
 export default function QuickActionSheet({
@@ -18,6 +19,7 @@ export default function QuickActionSheet({
   onWriteNote,
   onRecordHarvest,
   onCompleteTask,
+  onDiagnosePhoto,
 }: Props) {
   const action = (fn: () => void) => {
     onClose();
@@ -34,6 +36,7 @@ export default function QuickActionSheet({
           <SheetButton emoji="📝" label="Napsat poznámku" onPress={() => action(onWriteNote)} />
           <SheetButton emoji="🧺" label="Zaznamenat sklizeň" onPress={() => action(onRecordHarvest)} />
           <SheetButton emoji="✅" label="Označit úkol hotový" onPress={() => action(onCompleteTask)} />
+          <SheetButton emoji="🔍" label="Rozpoznat chorobu/škůdce" onPress={() => action(onDiagnosePhoto)} />
         </Pressable>
       </Pressable>
     </Modal>

@@ -13,6 +13,7 @@ import RecordHarvestScreen from '../screens/RecordHarvestScreen';
 import AddTaskScreen from '../screens/AddTaskScreen';
 import AddJournalEntryScreen from '../screens/AddJournalEntryScreen';
 import CompleteTaskScreen from '../screens/CompleteTaskScreen';
+import DiagnosePhotoScreen from '../screens/DiagnosePhotoScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -40,6 +41,11 @@ export default function RootNavigator() {
       <Stack.Screen name="AddTask" component={AddTaskScreen} options={{ title: 'Nový úkol' }} />
       <Stack.Screen name="AddJournalEntry" component={AddJournalEntryScreen} options={{ title: 'Nový záznam' }} />
       <Stack.Screen name="CompleteTask" component={CompleteTaskScreen} options={{ title: 'Splnit úkol' }} />
+      <Stack.Screen
+        name="DiagnosePhoto"
+        component={DiagnosePhotoScreen}
+        options={{ title: 'Rozpoznat chorobu/škůdce' }}
+      />
     </Stack.Navigator>
   );
 }

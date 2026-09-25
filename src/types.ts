@@ -176,6 +176,25 @@ export interface Harvest {
   date: string;
 }
 
+// Rozpoznání choroby/škůdce z fotky (V3, sekce 3 a 4 specifikace).
+// Appka výsledek vždy prezentuje jako odhad s % jistoty, nikdy jako jistou
+// diagnózu (sekce 5.5) - proto je "diagnosis" popisné a "confidencePercent"
+// vždy zobrazeno vedle něj. Zatím jen lokální (AsyncStorage), i pro sdílené
+// zahrady - synchronizace do Cloudu není pro V1 této funkce potřeba.
+export interface PhotoDiagnosis {
+  id: string;
+  bedId?: string;
+  treeId?: string;
+  photoUri: string;
+  diagnosis: string;
+  confidencePercent: number;
+  source: string;
+  ecoRecommendation: string;
+  standardRecommendation: string;
+  verifiedBySpecialist: boolean;
+  date: string;
+}
+
 export interface Article {
   id: string;
   title: string;

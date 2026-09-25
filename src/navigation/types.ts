@@ -7,6 +7,7 @@ export type RootStackParamList = {
   AddTask: undefined;
   AddJournalEntry: { bedId?: string; treeId?: string; photoOnly?: boolean };
   CompleteTask: undefined;
+  DiagnosePhoto: { bedId?: string; treeId?: string } | undefined;
 };
 
 export type MainTabParamList = {
