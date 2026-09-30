@@ -55,6 +55,22 @@ interface AppDataActions {
   addBed: (data: Omit<Bed, 'id' | 'gardenId'>) => Promise<Bed>;
   deleteBed: (bedId: string) => Promise<void>;
   addTree: (data: Omit<Tree, 'id' | 'gardenId'>) => Promise<Tree>;
+  updateTree: (
+    treeId: string,
+    data: Pick<
+      Tree,
+      | 'name'
+      | 'variety'
+      | 'varietyEarliness'
+      | 'category'
+      | 'rootstockType'
+      | 'location'
+      | 'plantedAt'
+      | 'status'
+      | 'note'
+      | 'speciesId'
+    >
+  ) => Promise<void>;
   deleteTree: (treeId: string) => Promise<void>;
   addPlanting: (data: Omit<PlantingRecord, 'id'>) => Promise<PlantingRecord>;
   updatePlanting: (
@@ -380,6 +396,37 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     [garden, profile.name]
   );
 
+  const updateTree = useCallback(
+    async (
+      treeId: string,
+      data: Pick<
+        Tree,
+        | 'name'
+        | 'variety'
+        | 'varietyEarliness'
+        | 'category'
+        | 'rootstockType'
+        | 'location'
+        | 'plantedAt'
+        | 'status'
+        | 'note'
+        | 'speciesId'
+      >
+    ) => {
+      const stamped = { ...data, lastEditedBy: profile.name, lastEditedAt: new Date().toISOString() };
+      if (garden?.shared) {
+        await setGardenDoc(garden.id, 'trees', treeId, stamped);
+        return;
+      }
+      setTrees((prev) => {
+        const next = prev.map((t) => (t.id === treeId ? { ...t, ...stamped } : t));
+        saveItem(STORAGE_KEYS.trees, next);
+        return next;
+      });
+    },
+    [garden, profile.name]
+  );
+
   const deleteTree = useCallback(
     async (treeId: string) => {
       if (garden?.shared) {
@@ -594,6 +641,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addBed,
       deleteBed,
       addTree,
+      updateTree,
       deleteTree,
       addPlanting,
       updatePlanting,
@@ -628,6 +676,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addBed,
       deleteBed,
       addTree,
+      updateTree,
       deleteTree,
       addPlanting,
       updatePlanting,

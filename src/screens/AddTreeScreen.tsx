@@ -7,6 +7,7 @@ import { DateField } from '../components/DatePicker';
 import { useAppData } from '../context/AppDataContext';
 import { useSingleSubmit } from '../utils/useSingleSubmit';
 import { EARLINESS_LABEL, EarlinessGroup, TreeCategory } from '../types';
+import { SEED_TREE_SPECIES } from '../data/seedTrees';
 
 type Props = NativeStackScreenProps<ZahradaStackParamList, 'AddTree'>;
 
@@ -18,6 +19,7 @@ export default function AddTreeScreen({ navigation }: Props) {
   const [variety, setVariety] = useState('');
   const [earliness, setEarliness] = useState<EarlinessGroup | undefined>(undefined);
   const [category, setCategory] = useState<TreeCategory>('ovocny');
+  const [speciesId, setSpeciesId] = useState<string | undefined>(undefined);
   const [rootstockType, setRootstockType] = useState('');
   const [location, setLocation] = useState('');
   const [plantedAt, setPlantedAt] = useState(new Date());
@@ -31,6 +33,7 @@ export default function AddTreeScreen({ navigation }: Props) {
       variety: variety.trim() || undefined,
       varietyEarliness: earliness,
       category,
+      speciesId: category === 'ovocny' ? speciesId : undefined,
       rootstockType: rootstockType.trim() || undefined,
       location: location.trim() || undefined,
       plantedAt: plantedAt.toISOString(),
@@ -83,6 +86,25 @@ export default function AddTreeScreen({ navigation }: Props) {
           </Pressable>
         ))}
       </View>
+      {category === 'ovocny' && (
+        <>
+          <Text style={styles.label}>Druh (volitelné)</Text>
+          <View style={styles.typeRow}>
+            {SEED_TREE_SPECIES.map((s) => (
+              <Pressable
+                key={s.id}
+                onPress={() => setSpeciesId(speciesId === s.id ? undefined : s.id)}
+                style={[styles.typeChip, speciesId === s.id && styles.typeChipActive]}
+              >
+                <Text style={[styles.typeChipText, speciesId === s.id && styles.typeChipTextActive]}>{s.name}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <HelperNote>
+            Podle druhu appka umí občas upozornit na typickou sezónní chorobu/škůdce (např. kadeřavost broskvoně).
+          </HelperNote>
+        </>
+      )}
       <TextField
         label="Typ podnože (volitelné)"
         value={rootstockType}

@@ -32,6 +32,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
       { speciesId: 'cuketa', reason: 'Konkurence o prostor a živiny' },
     ],
     commonMistakes: 'Nedostatečné hrůbkování snižuje výnos, sázení na stejné místo bez odstupu let.',
+    careReminders: [
+      {
+        months: [5, 6],
+        text: 'Brambory: ve vlhkém a teplém počasí hrozí plíseň bramborová - hrůbkujte a sledujte spodní listy, napadené natě odstraňte.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -63,6 +69,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
       { speciesId: 'hrach', reason: 'Luskoviny cibuli nesvědčí' },
     ],
     commonMistakes: 'Přílišná zálivka na konci sezóny zhoršuje skladovatelnost.',
+    careReminders: [
+      {
+        months: [4, 5],
+        text: 'Cibule: ve vlhkém jarním počasí hrozí plíseň cibulová (šedavý povlak na natích) - sázejte s dostatečným rozestupem, ať listy rychle osychají.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -75,6 +87,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
     goodCompanions: ['redkvicka', 'fazol_tyckovy', 'fazol_kerickovy'],
     badCompanions: [{ speciesId: 'brambory', reason: 'Konkurence o prostor a živiny' }],
     commonMistakes: 'Málo prostoru mezi rostlinami, opomíjené odstraňování starých listů napadených moučnatkou.',
+    careReminders: [
+      {
+        months: [6, 7],
+        text: 'Cuketa: v létě hrozí padlí dýňovité (bílý povlak na listech) - odstraňte nejvíc napadené listy a zajistěte rostlinám dost prostoru pro proudění vzduchu.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -103,6 +121,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
     goodCompanions: ['redkvicka', 'fazol_tyckovy', 'fazol_kerickovy'],
     badCompanions: [{ speciesId: 'brambory', reason: 'Konkurence o prostor a živiny' }],
     commonMistakes: 'Podcenění potřebného prostoru pro plazivé výhony, nedostatek opylovačů vede k málo plodům.',
+    careReminders: [
+      {
+        months: [6, 7],
+        text: 'Dýně: v létě hrozí padlí dýňovité (bílý povlak na listech) - odstraňte nejvíc napadené listy, ať se choroba nešíří dál.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -206,6 +230,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
       { speciesId: 'kapusta', reason: 'Odlišné nároky na půdu' },
     ],
     commonMistakes: 'Zapomenuté mulčování vede k zablácení plodů a hnilobě.',
+    careReminders: [
+      {
+        months: [4, 5],
+        text: 'Jahody: v době květu a dozrávání hrozí šedá hniloba plodů - mulčujte slámou, ať se plody nedotýkají vlhké půdy, a sklízejte průběžně.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -221,6 +251,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
       { speciesId: 'jahody', reason: 'Odlišné nároky na půdu' },
     ],
     commonMistakes: 'Podcenění ochrany proti housenkám a mšicím.',
+    careReminders: [
+      {
+        months: [5, 6, 7],
+        text: 'Kapusta: v létě hrozí housenky bělásků - kontrolujte spodní strany listů a housenky sbírejte, případně použijte proti motýlům jemnou síť.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -236,6 +272,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
       { speciesId: 'jahody', reason: 'Odlišné nároky na půdu' },
     ],
     commonMistakes: 'Krátká sezóna nestačí na vývin růžic, podcenění ochrany proti housenkám a mšicím.',
+    careReminders: [
+      {
+        months: [5, 6, 7],
+        text: 'Kapusta růžičková: v létě hrozí housenky bělásků - kontrolujte spodní strany listů a housenky sbírejte, případně použijte proti motýlům jemnou síť.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -371,6 +413,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
     goodCompanions: ['redkvicka', 'fazol_tyckovy', 'fazol_kerickovy'],
     badCompanions: [{ speciesId: 'brambory', reason: 'Konkurence o prostor a riziko plísně' }],
     commonMistakes: 'Podcenění potřeby tepla a prostoru pro popínavé/plazivé výhony, nepravidelná zálivka snižuje sladkost plodů.',
+    careReminders: [
+      {
+        months: [6, 7],
+        text: 'Meloun: v létě hrozí padlí dýňovité (bílý povlak na listech) - odstraňte nejvíc napadené listy, ať se choroba nešíří dál.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -383,6 +431,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
     goodCompanions: ['cibule', 'cesnek', 'hrach', 'salat'],
     badCompanions: [{ speciesId: 'celer', reason: 'Konkurence o živiny v hloubce půdy' }],
     commonMistakes: 'Kamenitá nebo hutná půda způsobuje zkroucené kořeny, řídnutí až po vzejití.',
+    careReminders: [
+      {
+        months: [4],
+        text: 'Mrkev: od května hrozí vrtule mrkvová (larvy poškozují kořeny) - přikryjte záhon netkanou textilií, ať na rostliny nemůže naklást vajíčka.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -395,6 +449,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
     goodCompanions: ['fazol_tyckovy', 'fazol_kerickovy', 'hrach', 'kedlubna'],
     badCompanions: [{ speciesId: 'brambory', reason: 'Konkurence a riziko plísně' }],
     commonMistakes: 'Pozdní sklizeň přerostlých plodů zhoršuje kvalitu nakládání, nepravidelná zálivka vede k hořkosti.',
+    careReminders: [
+      {
+        months: [6, 7],
+        text: 'Okurky: v teplém a vlhkém počasí hrozí padlí okurkové (bílý povlak na listech) - zalévejte kořeny, ne listy, a zajistěte dobré proudění vzduchu.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -407,6 +467,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
     goodCompanions: ['fazol_tyckovy', 'fazol_kerickovy', 'hrach', 'kedlubna'],
     badCompanions: [{ speciesId: 'brambory', reason: 'Konkurence a riziko plísně' }],
     commonMistakes: 'Nepravidelná zálivka vede k hořkosti plodů, málo opory pro popínavé odrůdy.',
+    careReminders: [
+      {
+        months: [6, 7],
+        text: 'Okurky: v teplém a vlhkém počasí hrozí padlí okurkové (bílý povlak na listech) - zalévejte kořeny, ne listy, a zajistěte dobré proudění vzduchu.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -455,6 +521,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
     goodCompanions: ['redkvicka', 'fazol_tyckovy', 'fazol_kerickovy'],
     badCompanions: [{ speciesId: 'brambory', reason: 'Konkurence o prostor a živiny' }],
     commonMistakes: 'Pozdní sklizeň vede k dřevnatění plodů, málo prostoru mezi rostlinami omezuje proudění vzduchu.',
+    careReminders: [
+      {
+        months: [6, 7],
+        text: 'Patizon: v létě hrozí padlí dýňovité (bílý povlak na listech) - odstraňte nejvíc napadené listy, ať se choroba nešíří dál.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -527,6 +599,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
       { speciesId: 'kapusta', reason: 'Konkurence o živiny a prostor' },
     ],
     commonMistakes: 'Přemokření a zálivka na listy podporují plíseň, málo prostoru mezi rostlinami omezuje proudění vzduchu.',
+    careReminders: [
+      {
+        months: [6, 7],
+        text: 'Rajčata: ve vlhkém a teplém počasí hrozí plíseň bramborová/rajčatová - zalévejte jen kořeny, nikdy ne na listy, a ideálně nechte rajčata mít nad sebou stříšku proti dešti.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -563,6 +641,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
     goodCompanions: ['salat', 'hrach', 'okurka_salatovka', 'okurka_nakladacka'],
     badCompanions: [],
     commonMistakes: 'Nepravidelná zálivka způsobuje dřevnatění a pálivost.',
+    careReminders: [
+      {
+        months: [3, 4],
+        text: 'Ředkvička: po vzejití hrozí dřepčíci (drobné dírky v listech) - přikryjte záhon netkanou textilií, hlavně v suchém a teplém počasí.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
   {
@@ -654,6 +738,12 @@ export const SEED_PLANT_SPECIES: PlantSpecies[] = [
       { speciesId: 'jahody', reason: 'Odlišné nároky na půdu' },
     ],
     commonMistakes: 'Nepravidelná zálivka vede k praskání hlávek.',
+    careReminders: [
+      {
+        months: [5, 6, 7],
+        text: 'Zelí: v létě hrozí housenky bělásků - kontrolujte spodní strany listů a housenky sbírejte, případně použijte proti motýlům jemnou síť.',
+      },
+    ],
     source: 'Ručně zpracováno',
   },
 ];

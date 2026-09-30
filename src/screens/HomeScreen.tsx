@@ -9,6 +9,7 @@ import { useAppData } from '../context/AppDataContext';
 import { pickEcoTip } from '../rules/ecoTipRules';
 import { taskPlacesLabel, formatDateTime } from '../utils/format';
 import { useGardenForecast } from '../hooks/useWeather';
+import { useDiagnosisHealth } from '../hooks/useDiagnosisHealth';
 import { weatherIcon } from '../utils/weather';
 import Fab from '../components/Fab';
 import QuickActionSheet from '../components/QuickActionSheet';
@@ -36,6 +37,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [sheetVisible, setSheetVisible] = useState(false);
   const { days: weatherDays, loading: weatherLoading, error: weatherError, stale: weatherStale, fetchedAt } =
     useGardenForecast();
+  const { showWarning: diagnosisWarning, dismiss: dismissDiagnosisWarning } = useDiagnosisHealth();
 
   const today = new Date();
   const todayIso = today.toISOString().slice(0, 10);
@@ -45,8 +47,8 @@ export default function HomeScreen({ navigation }: Props) {
   );
 
   const ecoTip = useMemo(
-    () => pickEcoTip({ today, garden, profile, plantings, weatherDays }),
-    [garden, profile, plantings, weatherDays]
+    () => pickEcoTip({ today, garden, profile, plantings, trees, weatherDays }),
+    [garden, profile, plantings, trees, weatherDays]
   );
 
   const todayWeather = weatherDays?.find((d) => d.date === todayIso);
@@ -96,6 +98,19 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.weatherValue}>🌤️ Počasí zatím není k dispozici.</Text>
         )}
       </Card>
+
+      {diagnosisWarning && (
+        <Card style={styles.diagnosisWarningCard}>
+          <View style={styles.taskRow}>
+            <Text style={styles.diagnosisWarningText}>
+              ⚠️ Rozpoznávání chorob/škůdců z fotky možná nefunguje. Dejte nám vědět, ať to opravíme.
+            </Text>
+            <Pressable onPress={dismissDiagnosisWarning} hitSlop={8}>
+              <Text style={styles.diagnosisWarningClose}>✕</Text>
+            </Pressable>
+          </View>
+        </Card>
+      )}
 
       {frostTomorrow && (
         <Card style={styles.frostCard}>
@@ -158,6 +173,9 @@ const styles = StyleSheet.create({
   weatherLabel: { fontSize: 13, fontWeight: '700', color: colors.textMuted, marginBottom: 4 },
   weatherValue: { fontSize: 14, color: colors.text },
   weatherNote: { fontSize: 12, color: colors.textMuted, marginTop: 4, fontStyle: 'italic' },
+  diagnosisWarningCard: { backgroundColor: '#FDECEA', borderColor: '#F3C6C1' },
+  diagnosisWarningText: { flex: 1, fontSize: 13, color: colors.danger, fontWeight: '600', marginRight: 8 },
+  diagnosisWarningClose: { fontSize: 16, color: colors.danger, fontWeight: '700' },
   frostCard: { backgroundColor: '#E3F0FA', borderColor: '#B8DDF2', marginTop: -4 },
   frostText: { fontSize: 14, color: colors.text, fontWeight: '600' },
   rainNote: { fontSize: 12, color: colors.textMuted, marginTop: 2 },

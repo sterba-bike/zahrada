@@ -5,7 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Screen, Card, PrimaryButton, SecondaryButton, SectionTitle, HelperNote, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
-import { diagnosePhoto, DiagnosisResult } from '../utils/diagnosis';
+import { diagnosePhoto, DiagnosisError, DiagnosisResult } from '../utils/diagnosis';
 import { useSingleSubmit } from '../utils/useSingleSubmit';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DiagnosePhoto'>;
@@ -60,8 +60,17 @@ export default function DiagnosePhotoScreen({ route, navigation }: Props) {
       const diagnosis = await diagnosePhoto(base64, mimeType);
       setResult(diagnosis);
       setRecommendation('eko');
-    } catch {
-      setError('Rozpoznání se nepodařilo. Zkontrolujte připojení k internetu a zkuste to znovu.');
+    } catch (e) {
+      const kind = e instanceof DiagnosisError ? e.kind : 'unknown';
+      if (kind === 'model_unavailable') {
+        setError('Rozpoznávání teď nefunguje kvůli technické aktualizaci na straně Google - dejte nám prosím vědět, ať to opravíme.');
+      } else if (kind === 'quota_exceeded') {
+        setError('Bezplatný limit dotazů je teď vyčerpaný. Zkuste to prosím za minutu znovu.');
+      } else if (kind === 'network') {
+        setError('Rozpoznání se nepodařilo. Zkontrolujte připojení k internetu a zkuste to znovu.');
+      } else {
+        setError('Rozpoznání se nepodařilo. Zkuste to prosím znovu.');
+      }
     } finally {
       setLoading(false);
     }

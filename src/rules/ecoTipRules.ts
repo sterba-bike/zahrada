@@ -1,5 +1,6 @@
-import { Garden, PlantingRecord, Profile, WeatherDay } from '../types';
+import { Garden, PlantingRecord, Profile, Tree, WeatherDay } from '../types';
 import { getSpeciesById } from '../data/seedPlants';
+import { getTreeSpeciesById } from '../data/seedTrees';
 import { SEASONAL_ECO_TIPS } from '../data/ecoTips';
 
 // Pravidlový systém pro eko-tip na Nástěnce (sekce 5.3 specifikace).
@@ -16,6 +17,7 @@ interface EcoTipContext {
   garden: Garden | null;
   profile: Profile;
   plantings: PlantingRecord[];
+  trees: Tree[];
   // Počasí je volitelné - appka umí ukázat eko-tip i bez něj (offline,
   // nebo dokud se předpověď nestáhla), jen tím přijde o pravidla Mráz/Sucho.
   weatherDays?: WeatherDay[] | null;
@@ -84,6 +86,43 @@ const bedHistoryRule: EcoTipRule = {
   },
 };
 
+// Priorita 6 - Sezónní upozornění na chorobu/škůdce: appka podle toho, co
+// aktuálně pěstujete (zelenina/byliny v záhonech i stromy/keře s přiřazeným
+// druhem), upozorní na typickou chorobu/škůdce, který je zrovna v sezóně
+// (např. "čas na ošetření kadeřavosti broskvoně"). Je-li aktuálních shod víc,
+// appka je střídá podle dne v roce, ať appka nepůsobí staticky.
+const seasonalCareReminderRule: EcoTipRule = {
+  id: 'seasonal-care-reminder',
+  priority: 6,
+  evaluate: (ctx) => {
+    const month = ctx.today.getMonth();
+    const matches = new Set<string>();
+
+    const growingSpeciesIds = ctx.plantings
+      .filter((p) => p.status.trim().toLowerCase() === 'roste')
+      .map((p) => p.speciesId);
+    for (const speciesId of growingSpeciesIds) {
+      const species = getSpeciesById(speciesId);
+      for (const reminder of species?.careReminders ?? []) {
+        if (reminder.months.includes(month)) matches.add(reminder.text);
+      }
+    }
+
+    for (const tree of ctx.trees) {
+      if (!tree.speciesId) continue;
+      const species = getTreeSpeciesById(tree.speciesId);
+      for (const reminder of species?.careReminders ?? []) {
+        if (reminder.months.includes(month)) matches.add(reminder.text);
+      }
+    }
+
+    if (matches.size === 0) return null;
+    const sorted = Array.from(matches).sort();
+    const index = dayOfYear(ctx.today) % sorted.length;
+    return sorted[index];
+  },
+};
+
 // Priorita 4 - Konkrétní rostlina: appka připomene časté chyby u jednoho
 // z aktuálně pěstovaných druhů (mění se v čase, ať appka nepůsobí staticky).
 const currentPlantMistakeRule: EcoTipRule = {
@@ -131,6 +170,7 @@ const seasonalFallbackRule: EcoTipRule = {
 const RULES: EcoTipRule[] = [
   frostRule,
   droughtRule,
+  seasonalCareReminderRule,
   bedHistoryRule,
   currentPlantMistakeRule,
   altitudeRule,

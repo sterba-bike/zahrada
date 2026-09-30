@@ -80,8 +80,26 @@ export interface Tree {
   variety?: string; // odrůda - zatím volný text, do budoucna výběr z nabídky
   varietyEarliness?: EarlinessGroup;
   photoUri?: string;
+  // Volitelné přiřazení druhu z encyklopedie dřevin (src/data/seedTrees.ts) -
+  // nepovinné a nemění se tím "name" (vlastní pojmenování stromu zůstává),
+  // jen appce umožní ukázat sezónní upozornění (viz careReminders) pro tenhle strom.
+  speciesId?: string;
   lastEditedBy?: string;
   lastEditedAt?: string;
+}
+
+// Sezónní upozornění na typickou chorobu/škůdce (např. "kadeřavost broskvoně") -
+// aktivní jen v uvedených měsících (0 = leden .. 11 = prosinec). Používá se
+// u zeleninových druhů (PlantSpecies.careReminders) i u dřevin (TreeSpecies).
+export interface SeasonalCareReminder {
+  months: number[];
+  text: string;
+}
+
+export interface TreeSpecies {
+  id: string;
+  name: string;
+  careReminders: SeasonalCareReminder[];
 }
 
 export type DifficultyGroup = 'narocna' | 'stredne_narocna' | 'mene_narocna' | 'luskovina';
@@ -116,6 +134,7 @@ export interface PlantSpecies {
   goodCompanions: string[]; // ids druhů
   badCompanions: BadCompanion[];
   commonMistakes: string;
+  careReminders?: SeasonalCareReminder[];
   source: string;
   verifiedBy?: string;
   verifiedAt?: string;

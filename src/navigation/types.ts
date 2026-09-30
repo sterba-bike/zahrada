@@ -26,6 +26,7 @@ export type ZahradaStackParamList = {
   TreeDetail: { treeId: string };
   AddBed: undefined;
   AddTree: undefined;
+  EditTree: { treeId: string };
   AddPlant: { bedId: string };
   EditPlant: { plantingId: string };
   Journal: { bedId?: string; treeId?: string; title: string };

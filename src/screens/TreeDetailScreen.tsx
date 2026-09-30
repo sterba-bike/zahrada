@@ -8,6 +8,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppData } from '../context/AppDataContext';
 import { formatDate, formatDateTime, taskPlacesLabel } from '../utils/format';
 import { EARLINESS_LABEL } from '../types';
+import { getTreeSpeciesById } from '../data/seedTrees';
 
 // Zaznamenat sklizeň (RecordHarvest) je globální obrazovka na kořenovém stacku,
 // proto kombinovaný typ navigace stejně jako u Deníku.
@@ -41,10 +42,14 @@ export default function TreeDetailScreen({ route, navigation }: Props) {
             variety={tree.variety + (tree.varietyEarliness ? ` · ${EARLINESS_LABEL[tree.varietyEarliness]}` : '')}
           />
         )}
+        <Pressable onPress={() => navigation.navigate('EditTree', { treeId })} hitSlop={8}>
+          <Text style={styles.editIcon}>✏️</Text>
+        </Pressable>
       </View>
       <Text style={styles.meta}>
         {tree.category === 'ovocny' ? 'Ovocný' : 'Okrasný'} · vysazeno {formatDate(tree.plantedAt)}
       </Text>
+      {tree.speciesId && <Text style={styles.meta}>Druh: {getTreeSpeciesById(tree.speciesId)?.name ?? tree.speciesId}</Text>}
       {tree.rootstockType && <Text style={styles.meta}>Podnož: {tree.rootstockType}</Text>}
       {tree.location && <Text style={styles.meta}>Umístění: {tree.location}</Text>}
       {tree.status && <Text style={styles.meta}>Stav: {tree.status}</Text>}
@@ -130,6 +135,7 @@ export default function TreeDetailScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { fontSize: 22, fontWeight: '800', color: colors.text },
+  editIcon: { fontSize: 18 },
   meta: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
   editedBy: { fontSize: 12, color: colors.textMuted, marginTop: 4, fontStyle: 'italic' },
   itemName: { fontSize: 16, fontWeight: '700', color: colors.text },
