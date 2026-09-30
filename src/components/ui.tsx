@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import GardenBackground from './GardenBackground';
 
 export const colors = {
   bg: '#F3FAF0',
@@ -30,13 +31,16 @@ export const colors = {
 export function Screen({
   children,
   scroll = true,
+  background = 'subtle',
 }: {
   children: React.ReactNode;
   scroll?: boolean;
+  background?: 'subtle' | 'hero' | 'none';
 }) {
   const Wrapper = scroll ? ScrollView : View;
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      {background !== 'none' && <GardenBackground variant={background} />}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

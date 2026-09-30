@@ -1,4 +1,4 @@
-// Datový model appky Ekozahrádka (V1 MVP podmnožina dle sekce 4 specifikace).
+// Datový model appky Moje zahrada (V1 MVP podmnožina dle sekce 4 specifikace).
 // V1 pracuje jen s jednou zahradou a jedním lokálním uživatelem (bez sdílení a účtů).
 
 export type ExperienceLevel = 'zacatecnik' | 'stredne_pokrocily' | 'pokrocily';

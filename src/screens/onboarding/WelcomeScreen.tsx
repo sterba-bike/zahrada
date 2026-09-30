@@ -8,12 +8,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 
 export default function WelcomeScreen({ navigation }: Props) {
   return (
-    <Screen scroll={false}>
+    <Screen scroll={false} background="hero">
       <View style={styles.center}>
         <View style={styles.emojiCircle}>
           <Text style={styles.emoji}>🌱</Text>
         </View>
-        <Text style={styles.title}>Ekozahrádka</Text>
+        <Text style={styles.title}>Moje zahrada</Text>
         <Text style={styles.subtitle}>
           Appka pro ekologické zahradničení. Evidence zahrady, kalendář prací, znalosti a
           doporučení na jednom místě - funguje i bez signálu.

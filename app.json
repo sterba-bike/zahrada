@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Ekozahrádka",
+    "name": "Moje zahrada",
     "slug": "zahrada",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -25,7 +25,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Ekozahrádka potřebuje přístup k fotkám, abyste mohli přidat fotografii k záznamu v deníku."
+          "photosPermission": "Moje zahrada potřebuje přístup k fotkám, abyste mohli přidat fotografii k záznamu v deníku."
         }
       ]
     ]
