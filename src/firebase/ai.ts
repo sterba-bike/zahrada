@@ -6,4 +6,4 @@ import { firebaseApp } from './config';
 // žádný citlivý API klíč z Google AI Studia nikde v kódu není.
 const ai = getAI(firebaseApp, { backend: new GoogleAIBackend() });
 
-export const visionModel = getGenerativeModel(ai, { model: 'gemini-2.5-flash' });
+export const visionModel = getGenerativeModel(ai, { model: 'gemini-3.8-flash' });
