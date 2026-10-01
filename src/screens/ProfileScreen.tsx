@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
-import { Screen, TextField, Card, SectionTitle, colors } from '../components/ui';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import { MainTabParamList, RootStackParamList } from '../navigation/types';
+import { Screen, TextField, Card, SecondaryButton, SectionTitle, colors } from '../components/ui';
+import ConfirmDialog from '../components/ConfirmDialog';
 import AccountSection from '../components/AccountSection';
 import { useAppData } from '../context/AppDataContext';
+import { useSingleSubmit } from '../utils/useSingleSubmit';
+import { saveAndShareJson } from '../utils/exportFile';
 import { ExperienceLevel } from '../types';
 
 const LEVELS: { key: ExperienceLevel; label: string }[] = [
@@ -11,10 +18,57 @@ const LEVELS: { key: ExperienceLevel; label: string }[] = [
   { key: 'pokrocily', label: 'Pokročilý' },
 ];
 
-export default function ProfileScreen() {
-  const { profile, updateProfile, garden } = useAppData();
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<MainTabParamList, 'Profil'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
+
+export default function ProfileScreen({ navigation }: Props) {
+  const { profile, updateProfile, garden, exportMyData, deleteMyData } = useAppData();
   const [name, setName] = useState(profile.name);
   const [email, setEmail] = useState(profile.email);
+  const [exporting, setExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleExport = useSingleSubmit(async () => {
+    setExporting(true);
+    setExportMessage(null);
+    try {
+      const data = await exportMyData();
+      await saveAndShareJson('moje-zahrada-data.json', data);
+    } catch {
+      setExportMessage('Stažení dat se nepodařilo. Zkontrolujte připojení k internetu a zkuste to znovu.');
+    } finally {
+      setExporting(false);
+    }
+  });
+
+  const handleDelete = useSingleSubmit(async () => {
+    setConfirmDelete(false);
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteMyData();
+      navigation.getParent<NativeStackNavigationProp<RootStackParamList>>()?.reset({
+        index: 0,
+        routes: [{ name: 'Welcome' }],
+      });
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code === 'auth/requires-recent-login') {
+        setDeleteError(
+          'Appka z bezpečnostních důvodů potřebuje čerstvé přihlášení - odhlaste se prosím a znovu se přihlaste, pak to zkuste znovu.'
+        );
+      } else {
+        setDeleteError('Smazání dat se nepodařilo. Zkontrolujte připojení k internetu a zkuste to znovu.');
+      }
+    } finally {
+      setDeleting(false);
+    }
+  });
 
   return (
     <Screen>
@@ -65,9 +119,45 @@ export default function ProfileScreen() {
       <Card>
         <Text style={styles.planMeta}>
           GPS poloha zahrady se používá jen pro dotaz na počasí a nikdy se nezobrazuje veřejně.
-          Možnost stažení nebo smazání dat (GDPR) bude doplněna v další verzi appky.
         </Text>
+
+        <Text style={styles.gdprLabel}>Stažení dat</Text>
+        <Text style={styles.planMeta}>
+          Stáhne soubor se všemi vašimi daty - zahrady, záhony, stromy, úkoly, deník, sklizně i rozpoznání z fotky.
+        </Text>
+        <SecondaryButton
+          title={exporting ? 'Připravuji soubor...' : 'Stáhnout má data'}
+          onPress={handleExport}
+        />
+        {exportMessage && <Text style={styles.errorText}>{exportMessage}</Text>}
+
+        <Text style={[styles.gdprLabel, { marginTop: 18 }]}>Smazání dat</Text>
+        <Text style={styles.planMeta}>
+          Trvale smaže všechna vaše lokální data a (jste-li přihlášeni) i přihlašovací účet. Ve sdílených
+          zahradách appka smaže jen vaše vlastní členství - obsah ostatních členů zůstane zachovaný.
+        </Text>
+        <Pressable
+          onPress={() => setConfirmDelete(true)}
+          style={styles.deleteButton}
+          disabled={deleting}
+        >
+          <Text style={styles.deleteButtonText}>
+            {deleting ? 'Mažu data...' : 'Smazat všechna má data'}
+          </Text>
+        </Pressable>
+        {deleteError && <Text style={styles.errorText}>{deleteError}</Text>}
       </Card>
+
+      <ConfirmDialog
+        visible={confirmDelete}
+        title="Smazat všechna má data"
+        message="Opravdu chcete trvale smazat všechna svoje data v appce? Tuto akci nejde vrátit zpět."
+        cancelText="Zrušit"
+        confirmText="Smazat natrvalo"
+        danger
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={handleDelete}
+      />
     </Screen>
   );
 }
@@ -88,4 +178,8 @@ const styles = StyleSheet.create({
   chipTextActive: { color: 'white' },
   planText: { fontSize: 15, fontWeight: '700', color: colors.text },
   planMeta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
+  gdprLabel: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 14, marginBottom: 2 },
+  errorText: { fontSize: 13, color: colors.danger, marginTop: 8 },
+  deleteButton: { marginTop: 10, alignSelf: 'flex-start' },
+  deleteButtonText: { color: colors.danger, fontWeight: '700', fontSize: 14 },
 });

@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, setDoc, deleteDoc, writeBatch, onSnapshot } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, deleteDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db } from './config';
 import { Bed, Garden, Harvest, JournalEntry, Membership, PlantingRecord, Task, Tree } from '../types';
 
@@ -253,4 +253,43 @@ export async function deletePlantingCascadeCloud(gardenId: string, plantingId: s
     batch.delete(doc(db, 'gardens', gardenId, 'tasks', t.id));
   }
   await batch.commit();
+}
+
+export interface GardenContentWithMembers extends GardenContent {
+  members: Membership[];
+}
+
+// Jednorázové (ne živé) načtení celého obsahu sdílené zahrady - používá se jen
+// pro export dat (GDPR "stažení dat"), ne pro běžné zobrazení v appce.
+export async function fetchGardenContentOnce(gardenId: string): Promise<GardenContentWithMembers> {
+  const mapDocs = <T>(snap: Awaited<ReturnType<typeof getDocs>>): T[] =>
+    snap.docs.map((d) => ({ ...(d.data() as object), id: d.id }) as T);
+
+  const [beds, trees, plantings, tasks, journal, harvests, members] = await Promise.all([
+    getDocs(collection(db, 'gardens', gardenId, 'beds')),
+    getDocs(collection(db, 'gardens', gardenId, 'trees')),
+    getDocs(collection(db, 'gardens', gardenId, 'plantings')),
+    getDocs(collection(db, 'gardens', gardenId, 'tasks')),
+    getDocs(collection(db, 'gardens', gardenId, 'journal')),
+    getDocs(collection(db, 'gardens', gardenId, 'harvests')),
+    getDocs(collection(db, 'gardens', gardenId, 'members')),
+  ]);
+
+  return {
+    beds: mapDocs<Bed>(beds),
+    trees: mapDocs<Tree>(trees),
+    plantings: mapDocs<PlantingRecord>(plantings),
+    tasks: mapDocs<Task>(tasks),
+    journal: mapDocs<JournalEntry>(journal),
+    harvests: mapDocs<Harvest>(harvests),
+    members: members.docs.map((d) => d.data() as Membership),
+  };
+}
+
+// Odebere appce jen VLASTNÍ členství ve sdílené zahradě (viz bezpečnostní
+// pravidla - smazat smí člen jen svůj vlastní záznam) - použito při "smazání
+// mých dat" (GDPR), aby appka přestala sdílenou zahradu vůbec vidět, aniž by
+// smazala obsah patřící ostatním členům.
+export async function leaveGardenAsMember(gardenId: string, uid: string): Promise<void> {
+  await deleteDoc(doc(db, 'gardens', gardenId, 'members', uid));
 }

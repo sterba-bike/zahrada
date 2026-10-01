@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { generateId, loadItem, saveItem, STORAGE_KEYS } from '../data/storage';
 import { useAuth } from './AuthContext';
+import { deleteUser as deleteFirebaseUser } from 'firebase/auth';
 import {
   shareGardenInCloud,
   joinGardenByCode,
@@ -10,6 +11,8 @@ import {
   deleteBedCascadeCloud,
   deleteTreeCascadeCloud,
   deletePlantingCascadeCloud,
+  fetchGardenContentOnce,
+  leaveGardenAsMember,
 } from '../firebase/firestore';
 import {
   Bed,
@@ -85,6 +88,8 @@ interface AppDataActions {
   addPhotoDiagnosis: (data: Omit<PhotoDiagnosis, 'id' | 'date'>) => Promise<PhotoDiagnosis>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   bedHistory: (bedId: string) => PlantingRecord[];
+  exportMyData: () => Promise<Record<string, unknown>>;
+  deleteMyData: () => Promise<void>;
 }
 
 const AppDataContext = createContext<(AppDataState & AppDataActions) | null>(null);
@@ -618,6 +623,73 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     [activePlantings]
   );
 
+  // GDPR "stažení dat" - appka vrátí úplně všechno, co o uživateli a jeho
+  // zahradách ví: lokální data (všechny lokální zahrady), obsah sdílených
+  // zahrad načtený přímo z Cloudu (ne jen z té aktuálně otevřené), a základní
+  // údaje o účtu, je-li appka přihlášená.
+  const exportMyData = useCallback(async () => {
+    const sharedGardens = [];
+    for (const g of gardens.filter((g) => g.shared)) {
+      const content = await fetchGardenContentOnce(g.id);
+      sharedGardens.push({ gardenId: g.id, name: g.name, ...content });
+    }
+    return {
+      exportedAt: new Date().toISOString(),
+      profile,
+      gardens,
+      local: { beds, trees, plantings, tasks, journal, harvests },
+      photoDiagnoses,
+      sharedGardens,
+      account: user ? { uid: user.uid, email: user.email } : null,
+    };
+  }, [gardens, profile, beds, trees, plantings, tasks, journal, harvests, photoDiagnoses, user]);
+
+  // GDPR "smazání dat" - appka smaže všechna lokální data a (je-li appka
+  // přihlášená) opustí vlastní členství ve všech sdílených zahradách (bez
+  // zásahu do dat ostatních členů) a smaže appce přihlašovací účet. Appku to
+  // vrátí do stavu "čerstvě nainstalovaná appka".
+  const deleteMyData = useCallback(async () => {
+    if (user) {
+      for (const g of gardens.filter((g) => g.shared)) {
+        try {
+          await leaveGardenAsMember(g.id, user.uid);
+        } catch {
+          // Appka smaže co nejvíc i při dílčí chybě (např. už smazaná zahrada).
+        }
+      }
+    }
+
+    await Promise.all([
+      saveItem(STORAGE_KEYS.garden, null),
+      saveItem(STORAGE_KEYS.gardens, []),
+      saveItem(STORAGE_KEYS.activeGardenId, null),
+      saveItem(STORAGE_KEYS.beds, []),
+      saveItem(STORAGE_KEYS.trees, []),
+      saveItem(STORAGE_KEYS.plantings, []),
+      saveItem(STORAGE_KEYS.tasks, []),
+      saveItem(STORAGE_KEYS.journal, []),
+      saveItem(STORAGE_KEYS.harvests, []),
+      saveItem(STORAGE_KEYS.photoDiagnoses, []),
+      saveItem(STORAGE_KEYS.diagnosisHealth, null),
+      saveItem(STORAGE_KEYS.profile, DEFAULT_PROFILE),
+    ]);
+
+    setGardens([]);
+    setActiveGardenId(null);
+    setBeds([]);
+    setTrees([]);
+    setPlantings([]);
+    setTasks([]);
+    setJournal([]);
+    setHarvests([]);
+    setPhotoDiagnoses([]);
+    setProfile(DEFAULT_PROFILE);
+
+    if (user) {
+      await deleteFirebaseUser(user);
+    }
+  }, [gardens, user]);
+
   const value = useMemo(
     () => ({
       loading,
@@ -653,6 +725,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addPhotoDiagnosis,
       updateProfile,
       bedHistory,
+      exportMyData,
+      deleteMyData,
     }),
     [
       loading,
@@ -688,6 +762,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addPhotoDiagnosis,
       updateProfile,
       bedHistory,
+      exportMyData,
+      deleteMyData,
     ]
   );
 
