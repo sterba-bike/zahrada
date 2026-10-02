@@ -142,24 +142,39 @@ export async function joinGardenByCode(code: string, uid: string, email: string)
 type CollectionName = 'beds' | 'trees' | 'plantings' | 'tasks' | 'journal' | 'harvests';
 
 // Živě sleduje jednu podsbírku sdílené zahrady - appka se tak dozví o změnách
-// od ostatních členů prakticky ihned, bez ručního obnovování.
+// od ostatních členů prakticky ihned, bez ručního obnovování. "onError" appce
+// umožní poznat, že appce byl odebrán přístup (např. ji vlastník odebral ze
+// zahrady) - Firestore na to místo prázdných dat vrátí chybu oprávnění.
 export function subscribeGardenCollection<T extends { id: string }>(
   gardenId: string,
   collectionName: CollectionName,
-  onData: (items: T[]) => void
+  onData: (items: T[]) => void,
+  onError?: (error: unknown) => void
 ): () => void {
   const ref = collection(db, 'gardens', gardenId, collectionName);
-  return onSnapshot(ref, (snap) => {
-    const items = snap.docs.map((d) => ({ ...(d.data() as Omit<T, 'id'>), id: d.id }) as T);
-    onData(items);
-  });
+  return onSnapshot(
+    ref,
+    (snap) => {
+      const items = snap.docs.map((d) => ({ ...(d.data() as Omit<T, 'id'>), id: d.id }) as T);
+      onData(items);
+    },
+    onError
+  );
 }
 
-export function subscribeMembers(gardenId: string, onData: (members: Membership[]) => void): () => void {
+export function subscribeMembers(
+  gardenId: string,
+  onData: (members: Membership[]) => void,
+  onError?: (error: unknown) => void
+): () => void {
   const ref = collection(db, 'gardens', gardenId, 'members');
-  return onSnapshot(ref, (snap) => {
-    onData(snap.docs.map((d) => d.data() as Membership));
-  });
+  return onSnapshot(
+    ref,
+    (snap) => {
+      onData(snap.docs.map((d) => d.data() as Membership));
+    },
+    onError
+  );
 }
 
 // merge: true - bezpečné jak pro vytvoření nového dokumentu, tak pro částečnou

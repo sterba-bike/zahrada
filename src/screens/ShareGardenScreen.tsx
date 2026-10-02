@@ -1,20 +1,58 @@
 import React, { useState } from 'react';
 import { Pressable, Text, StyleSheet } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Clipboard from 'expo-clipboard';
-import { ZahradaStackParamList } from '../navigation/types';
+import { RootStackParamList, ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, PrimaryButton, colors } from '../components/ui';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppData } from '../context/AppDataContext';
 import { useAuth } from '../context/AuthContext';
 import { useSingleSubmit } from '../utils/useSingleSubmit';
+import { Membership } from '../types';
 
 type Props = NativeStackScreenProps<ZahradaStackParamList, 'ShareGarden'>;
 
 export default function ShareGardenScreen({ navigation }: Props) {
-  const { garden, members } = useAppData();
+  const { garden, members, gardens, leaveSharedGarden, removeGardenMember } = useAppData();
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<Membership | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const handleRemoveMember = useSingleSubmit(async () => {
+    if (!memberToRemove) return;
+    setActionError(null);
+    try {
+      await removeGardenMember(memberToRemove.uid);
+    } catch {
+      setActionError('Odebrání se nepodařilo - zkontroluj připojení k internetu a zkus to znovu.');
+    } finally {
+      setMemberToRemove(null);
+    }
+  });
+
+  const handleLeave = useSingleSubmit(async () => {
+    setConfirmLeave(false);
+    setActionError(null);
+    if (!garden) return;
+    const gardenId = garden.id;
+    const hasOtherGarden = gardens.some((g) => g.id !== gardenId);
+    try {
+      await leaveSharedGarden();
+      if (hasOtherGarden) {
+        navigation.navigate('GardenDetail');
+      } else {
+        navigation
+          .getParent()
+          ?.getParent<NativeStackNavigationProp<RootStackParamList>>()
+          ?.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+      }
+    } catch {
+      setActionError('Opuštění zahrady se nepodařilo - zkontroluj připojení k internetu a zkus to znovu.');
+    }
+  });
 
   if (!garden) {
     return (
@@ -41,6 +79,8 @@ export default function ShareGardenScreen({ navigation }: Props) {
   }
 
   if (garden.shared) {
+    const isOwner = garden.ownerId === user.uid;
+
     return (
       <Screen>
         <SectionTitle>Sdílená zahrada</SectionTitle>
@@ -66,12 +106,46 @@ export default function ShareGardenScreen({ navigation }: Props) {
         </Card>
 
         <SectionTitle>Členové ({members.length})</SectionTitle>
+        {actionError && <Text style={styles.error}>{actionError}</Text>}
         {members.map((m) => (
-          <Card key={m.uid}>
+          <Card key={m.uid} style={styles.memberRow}>
             <Text style={styles.memberEmail}>{m.email}</Text>
             <Text style={styles.memberRole}>{m.role === 'vlastnik' ? 'Vlastník' : 'Člen'}</Text>
+            {isOwner && m.role !== 'vlastnik' && (
+              <Pressable onPress={() => setMemberToRemove(m)} hitSlop={8} style={styles.removeLink}>
+                <Text style={styles.removeLinkText}>Odebrat ze zahrady</Text>
+              </Pressable>
+            )}
           </Card>
         ))}
+
+        {!isOwner && (
+          <Pressable onPress={() => setConfirmLeave(true)} style={styles.leaveButton}>
+            <Text style={styles.leaveButtonText}>Opustit tuto zahradu</Text>
+          </Pressable>
+        )}
+
+        <ConfirmDialog
+          visible={!!memberToRemove}
+          title="Odebrat člena"
+          message={`Opravdu odebrat ${memberToRemove?.email} ze sdílené zahrady? Přístup ztratí okamžitě, jeho dosavadní záznamy v zahradě ale zůstanou zachované.`}
+          cancelText="Zrušit"
+          confirmText="Odebrat"
+          danger
+          onCancel={() => setMemberToRemove(null)}
+          onConfirm={handleRemoveMember}
+        />
+
+        <ConfirmDialog
+          visible={confirmLeave}
+          title="Opustit zahradu"
+          message={`Opravdu chcete opustit sdílenou zahradu "${garden.name}"? Přístup ztratíte okamžitě, vaše dosavadní záznamy v zahradě ale zůstanou ostatním zachované.`}
+          cancelText="Zrušit"
+          confirmText="Opustit"
+          danger
+          onCancel={() => setConfirmLeave(false)}
+          onConfirm={handleLeave}
+        />
       </Screen>
     );
   }
@@ -137,6 +211,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   copyButtonText: { color: colors.primaryDark, fontWeight: '700' },
-  memberEmail: { fontSize: 14, fontWeight: '700', color: colors.text },
-  memberRole: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  memberRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
+  memberEmail: { fontSize: 14, fontWeight: '700', color: colors.text, flex: 1 },
+  memberRole: { fontSize: 12, color: colors.textMuted, marginRight: 12 },
+  removeLink: {},
+  removeLinkText: { fontSize: 13, color: colors.danger, fontWeight: '600' },
+  leaveButton: { marginTop: 16, alignSelf: 'flex-start' },
+  leaveButtonText: { color: colors.danger, fontWeight: '700', fontSize: 14 },
 });

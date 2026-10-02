@@ -55,6 +55,8 @@ interface AppDataActions {
   updateGarden: (gardenId: string, data: Partial<Pick<Garden, 'lat' | 'lon'>>) => Promise<void>;
   shareGarden: () => Promise<string>;
   joinGarden: (code: string) => Promise<void>;
+  leaveSharedGarden: () => Promise<void>;
+  removeGardenMember: (uid: string) => Promise<void>;
   addBed: (data: Omit<Bed, 'id' | 'gardenId'>) => Promise<Bed>;
   deleteBed: (bedId: string) => Promise<void>;
   addTree: (data: Omit<Tree, 'id' | 'gardenId'>) => Promise<Tree>;
@@ -131,14 +133,34 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     const gardenId = garden.id;
+
+    // Appka tak pozná, že jí byl odebrán přístup (např. ji vlastník odebral
+    // ze zahrady) - Firestore vrátí chybu oprávnění místo dat. Appka si pak
+    // zahradu přestane pamatovat, ať nezůstane "zaseknutá" na prázdné sdílené
+    // zahradě, ke které už nemá přístup.
+    const handleAccessRevoked = (error: unknown) => {
+      if ((error as { code?: string })?.code !== 'permission-denied') return;
+      setGardens((prev) => {
+        const next = prev.filter((g) => g.id !== gardenId);
+        saveItem(STORAGE_KEYS.gardens, next);
+        setActiveGardenId((prevActive) => {
+          if (prevActive !== gardenId) return prevActive;
+          const fallback = next[0]?.id ?? null;
+          saveItem(STORAGE_KEYS.activeGardenId, fallback);
+          return fallback;
+        });
+        return next;
+      });
+    };
+
     const unsubscribers = [
-      subscribeGardenCollection<Bed>(gardenId, 'beds', setCloudBeds),
-      subscribeGardenCollection<Tree>(gardenId, 'trees', setCloudTrees),
-      subscribeGardenCollection<PlantingRecord>(gardenId, 'plantings', setCloudPlantings),
-      subscribeGardenCollection<Task>(gardenId, 'tasks', setCloudTasks),
-      subscribeGardenCollection<JournalEntry>(gardenId, 'journal', setCloudJournal),
-      subscribeGardenCollection<Harvest>(gardenId, 'harvests', setCloudHarvests),
-      subscribeMembers(gardenId, setCloudMembers),
+      subscribeGardenCollection<Bed>(gardenId, 'beds', setCloudBeds, handleAccessRevoked),
+      subscribeGardenCollection<Tree>(gardenId, 'trees', setCloudTrees, handleAccessRevoked),
+      subscribeGardenCollection<PlantingRecord>(gardenId, 'plantings', setCloudPlantings, handleAccessRevoked),
+      subscribeGardenCollection<Task>(gardenId, 'tasks', setCloudTasks, handleAccessRevoked),
+      subscribeGardenCollection<JournalEntry>(gardenId, 'journal', setCloudJournal, handleAccessRevoked),
+      subscribeGardenCollection<Harvest>(gardenId, 'harvests', setCloudHarvests, handleAccessRevoked),
+      subscribeMembers(gardenId, setCloudMembers, handleAccessRevoked),
     ];
     return () => unsubscribers.forEach((unsub) => unsub());
   }, [garden?.id, garden?.shared]);
@@ -306,6 +328,41 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       await saveItem(STORAGE_KEYS.activeGardenId, joined.id);
     },
     [user]
+  );
+
+  // Člen může sdílenou zahradu kdykoli opustit - appka mu smaže jen jeho
+  // vlastní členství (obsah zahrady zůstává ostatním nedotčený) a appka mu
+  // tu zahradu přestane v appce nabízet. Vlastník zahradu takhle opustit
+  // nemůže (šlo by tím snadno zahradu nechtěně "osiřit") - musel by ji nejdřív
+  // předat někomu jinému, to appka zatím neumí.
+  const leaveSharedGarden = useCallback(async () => {
+    if (!garden?.shared || !user) throw new Error('no_shared_garden');
+    const ownRole = cloudMembers.find((m) => m.uid === user.uid)?.role;
+    if (ownRole === 'vlastnik') throw new Error('owner_cannot_leave');
+
+    await leaveGardenAsMember(garden.id, user.uid);
+    const leftId = garden.id;
+    setGardens((prev) => {
+      const next = prev.filter((g) => g.id !== leftId);
+      saveItem(STORAGE_KEYS.gardens, next);
+      return next;
+    });
+    const fallback = gardens.find((g) => g.id !== leftId)?.id ?? null;
+    setActiveGardenId(fallback);
+    await saveItem(STORAGE_KEYS.activeGardenId, fallback);
+  }, [garden, user, cloudMembers, gardens]);
+
+  // Jen vlastník smí odebrat jiného člena (viz bezpečnostní pravidla) - danému
+  // členovi appka sama pozná ztrátu přístupu (viz handleAccessRevoked výš) a
+  // zahradu si u sebe přestane pamatovat.
+  const removeGardenMember = useCallback(
+    async (uid: string) => {
+      if (!garden?.shared || !user) throw new Error('no_shared_garden');
+      if (garden.ownerId !== user.uid) throw new Error('not_owner');
+      if (uid === user.uid) throw new Error('cannot_remove_self');
+      await leaveGardenAsMember(garden.id, uid);
+    },
+    [garden, user]
   );
 
   const addBed = useCallback(
@@ -710,6 +767,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       updateGarden,
       shareGarden,
       joinGarden,
+      leaveSharedGarden,
+      removeGardenMember,
       addBed,
       deleteBed,
       addTree,
@@ -747,6 +806,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       updateGarden,
       shareGarden,
       joinGarden,
+      leaveSharedGarden,
+      removeGardenMember,
       addBed,
       deleteBed,
       addTree,
