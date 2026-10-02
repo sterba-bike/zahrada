@@ -192,6 +192,39 @@ export async function deleteGardenDoc(gardenId: string, collectionName: Collecti
   await deleteDoc(doc(db, 'gardens', gardenId, collectionName, docId));
 }
 
+// Dávkový zápis/mazání víc dokumentů najednou (Firestore dovolí max. 500
+// zápisů na dávku) - používá se u opakujících se úkolů, kde appka zakládá
+// nebo ruší víc výskytů najednou.
+export async function setGardenDocsBatch<T extends object>(
+  gardenId: string,
+  collectionName: CollectionName,
+  items: { id: string; data: T }[]
+): Promise<void> {
+  for (let i = 0; i < items.length; i += 400) {
+    const batch = writeBatch(db);
+    for (const item of items.slice(i, i + 400)) {
+      batch.set(doc(db, 'gardens', gardenId, collectionName, item.id), item.data as Record<string, unknown>, {
+        merge: true,
+      });
+    }
+    await batch.commit();
+  }
+}
+
+export async function deleteGardenDocsBatch(
+  gardenId: string,
+  collectionName: CollectionName,
+  ids: string[]
+): Promise<void> {
+  for (let i = 0; i < ids.length; i += 400) {
+    const batch = writeBatch(db);
+    for (const id of ids.slice(i, i + 400)) {
+      batch.delete(doc(db, 'gardens', gardenId, collectionName, id));
+    }
+    await batch.commit();
+  }
+}
+
 // Kaskádové mazání v Cloudu - zrcadlí stejná pravidla jako lokální verze
 // v AppDataContext (viz komentáře tam), jen zapisuje do Firestore dávkou.
 

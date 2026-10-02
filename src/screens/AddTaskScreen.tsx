@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { Screen, TextField, PrimaryButton, SectionTitle, colors } from '../components/ui';
+import { Screen, TextField, PrimaryButton, SectionTitle, HelperNote, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { useSingleSubmit } from '../utils/useSingleSubmit';
-import { TaskType } from '../types';
+import { REPEAT_INTERVAL_LABEL, RepeatInterval, TaskType } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddTask'>;
 
@@ -18,11 +18,14 @@ const TYPES: { key: TaskType; label: string }[] = [
   { key: 'jine', label: 'Jiné' },
 ];
 
+const REPEAT_OPTIONS: RepeatInterval[] = ['denne', 'tydne', 'dvoutydne', 'mesicne'];
+
 export default function AddTaskScreen({ navigation }: Props) {
   const { garden, beds, trees, addTask } = useAppData();
   const [title, setTitle] = useState('');
   const [type, setType] = useState<TaskType>('zaliti');
   const [dueDate, setDueDate] = useState(new Date().toLocaleDateString('cs-CZ'));
+  const [repeatInterval, setRepeatInterval] = useState<RepeatInterval | undefined>(undefined);
   const [bedIds, setBedIds] = useState<string[]>([]);
   const [treeIds, setTreeIds] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
@@ -52,6 +55,7 @@ export default function AddTaskScreen({ navigation }: Props) {
       title: title.trim(),
       type,
       dueDate: parseDate(dueDate),
+      repeatInterval,
     });
     navigation.goBack();
   });
@@ -78,6 +82,33 @@ export default function AddTaskScreen({ navigation }: Props) {
         ))}
       </View>
       <TextField label="Termín" value={dueDate} onChangeText={setDueDate} placeholder="d.m.rrrr" />
+
+      <Text style={styles.label}>Opakování (volitelné)</Text>
+      <View style={styles.chipRow}>
+        <Pressable
+          onPress={() => setRepeatInterval(undefined)}
+          style={[styles.chip, !repeatInterval && styles.chipActive]}
+        >
+          <Text style={[styles.chipText, !repeatInterval && styles.chipTextActive]}>Neopakovat</Text>
+        </Pressable>
+        {REPEAT_OPTIONS.map((r) => (
+          <Pressable
+            key={r}
+            onPress={() => setRepeatInterval(r)}
+            style={[styles.chip, repeatInterval === r && styles.chipActive]}
+          >
+            <Text style={[styles.chipText, repeatInterval === r && styles.chipTextActive]}>
+              {REPEAT_INTERVAL_LABEL[r]}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      {repeatInterval && (
+        <HelperNote>
+          Appka rovnou založí víc výskytů dopředu (zhruba na půl roku až rok). Opakování můžete kdykoli zrušit
+          u kteréhokoli výskytu v kalendáři.
+        </HelperNote>
+      )}
 
       {(beds.length > 0 || trees.length > 0) && (
         <>

@@ -8,12 +8,15 @@ import {
   subscribeGardenCollection,
   subscribeMembers,
   setGardenDoc,
+  setGardenDocsBatch,
+  deleteGardenDocsBatch,
   deleteBedCascadeCloud,
   deleteTreeCascadeCloud,
   deletePlantingCascadeCloud,
   fetchGardenContentOnce,
   leaveGardenAsMember,
 } from '../firebase/firestore';
+import { generateOccurrenceDates } from '../utils/recurringTasks';
 import {
   Bed,
   Garden,
@@ -85,6 +88,7 @@ interface AppDataActions {
   deletePlanting: (plantingId: string) => Promise<void>;
   addTask: (data: Omit<Task, 'id' | 'done'>) => Promise<Task>;
   completeTask: (taskId: string) => Promise<void>;
+  cancelRecurringSeries: (seriesId: string) => Promise<void>;
   addJournalEntry: (data: Omit<JournalEntry, 'id' | 'lastEditedBy' | 'lastEditedAt'>) => Promise<JournalEntry>;
   addHarvest: (data: Omit<Harvest, 'id'>) => Promise<Harvest>;
   addPhotoDiagnosis: (data: Omit<PhotoDiagnosis, 'id' | 'date'>) => Promise<PhotoDiagnosis>;
@@ -585,17 +589,47 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   const addTask = useCallback(
     async (data: Omit<Task, 'id' | 'done'>) => {
-      const newTask: Task = { ...data, id: generateId(), done: false };
-      if (garden?.shared) {
-        await setGardenDoc(garden.id, 'tasks', newTask.id, newTask);
+      if (!data.repeatInterval) {
+        const newTask: Task = { ...data, id: generateId(), done: false };
+        if (garden?.shared) {
+          await setGardenDoc(garden.id, 'tasks', newTask.id, newTask);
+          return newTask;
+        }
+        setTasks((prev) => {
+          const next = [...prev, newTask];
+          saveItem(STORAGE_KEYS.tasks, next);
+          return next;
+        });
         return newTask;
       }
+
+      // Opakující se úkol - appka rovnou založí víc výskytů dopředu (viz
+      // generateOccurrenceDates), každý jako samostatný úkol se stejným
+      // seriesId, ať je v kalendáři hned vidět a jde dokončovat po jednom.
+      const seriesId = generateId();
+      const dates = generateOccurrenceDates(new Date(data.dueDate), data.repeatInterval);
+      const occurrences: Task[] = dates.map((d) => ({
+        ...data,
+        id: generateId(),
+        done: false,
+        seriesId,
+        dueDate: d.toISOString(),
+      }));
+
+      if (garden?.shared) {
+        await setGardenDocsBatch(
+          garden.id,
+          'tasks',
+          occurrences.map((t) => ({ id: t.id, data: t }))
+        );
+        return occurrences[0];
+      }
       setTasks((prev) => {
-        const next = [...prev, newTask];
+        const next = [...prev, ...occurrences];
         saveItem(STORAGE_KEYS.tasks, next);
         return next;
       });
-      return newTask;
+      return occurrences[0];
     },
     [garden]
   );
@@ -614,6 +648,25 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       });
     },
     [garden, profile.name]
+  );
+
+  // Zruší opakování - smaže všechny dosud nesplněné výskyty dané série (ty
+  // budoucí), splněné výskyty zůstanou jako historie zachované.
+  const cancelRecurringSeries = useCallback(
+    async (seriesId: string) => {
+      const idsToDelete = activeTasks.filter((t) => t.seriesId === seriesId && !t.done).map((t) => t.id);
+      if (idsToDelete.length === 0) return;
+      if (garden?.shared) {
+        await deleteGardenDocsBatch(garden.id, 'tasks', idsToDelete);
+        return;
+      }
+      setTasks((prev) => {
+        const next = prev.filter((t) => !idsToDelete.includes(t.id));
+        saveItem(STORAGE_KEYS.tasks, next);
+        return next;
+      });
+    },
+    [garden, activeTasks]
   );
 
   const addJournalEntry = useCallback(
@@ -779,6 +832,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       deletePlanting,
       addTask,
       completeTask,
+      cancelRecurringSeries,
       addJournalEntry,
       addHarvest,
       addPhotoDiagnosis,
@@ -818,6 +872,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       deletePlanting,
       addTask,
       completeTask,
+      cancelRecurringSeries,
       addJournalEntry,
       addHarvest,
       addPhotoDiagnosis,
