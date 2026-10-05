@@ -27,6 +27,12 @@
         {
           "photosPermission": "Moje zahrada potřebuje přístup k fotkám, abyste mohli přidat fotografii k záznamu v deníku."
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Moje zahrada potřebuje přístup k poloze telefonu, jen aby u víc zahrad poznala, která je nejblíž. Poloha se nikam neukládá ani neodesílá."
+        }
       ]
     ]
   }

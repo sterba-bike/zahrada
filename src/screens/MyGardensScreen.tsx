@@ -4,16 +4,18 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ZahradaStackParamList } from '../navigation/types';
 import { Screen, Card, SectionTitle, colors } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
+import { useNearestGarden } from '../hooks/useNearestGarden';
 
 type Props = NativeStackScreenProps<ZahradaStackParamList, 'MyGardens'>;
 
 export default function MyGardensScreen({ navigation }: Props) {
-  const { gardens, activeGardenId, switchGarden } = useAppData();
+  const { activeGardenId, switchGarden } = useAppData();
+  const { orderedGardens, nearestId } = useNearestGarden();
 
   return (
     <Screen>
       <SectionTitle>Moje zahrady</SectionTitle>
-      {gardens.map((g) => {
+      {orderedGardens.map((g) => {
         const active = g.id === activeGardenId;
         return (
           <Card key={g.id} style={[styles.gardenCard, active && styles.gardenCardActive]}>
@@ -25,7 +27,10 @@ export default function MyGardensScreen({ navigation }: Props) {
             >
               <View style={styles.rowBetween}>
                 <View>
-                  <Text style={styles.gardenName}>{g.name}</Text>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.gardenName}>{g.name}</Text>
+                    {g.id === nearestId && <Text style={styles.nearestBadge}>📍 Nejblíž</Text>}
+                  </View>
                   <Text style={styles.gardenLocation}>{g.location}</Text>
                 </View>
                 {active && <Text style={styles.activeBadge}>Aktivní</Text>}
@@ -68,7 +73,17 @@ const styles = StyleSheet.create({
   gardenCard: { borderWidth: 1.5, borderColor: colors.border },
   gardenCardActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   gardenName: { fontSize: 16, fontWeight: '700', color: colors.text },
+  nearestBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.primaryDark,
+    backgroundColor: colors.primarySoft,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
   gardenLocation: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   activeBadge: { color: colors.primaryDark, fontWeight: '700', fontSize: 12 },
   addLink: { color: colors.primary, fontWeight: '600', marginTop: 8 },
